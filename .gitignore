@@ -1,3 +1,3 @@
 sdkconfig.old
 build/
-pytest_wifi_station.py
+dependencies.lock
