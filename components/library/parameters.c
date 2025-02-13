@@ -15,17 +15,12 @@
 //     char param3[32];
 // } system_params_t;
 
+
+
 // static system_params_t params;
 // static bool params_dirty = false;
 // static esp_timer_handle_t save_timer;
 
-// // Function declarations
-// void load_parameters();
-// void save_parameters();
-// void set_param1(int value);
-// void set_param2(float value);
-// void set_param3(const char *value);
-// void schedule_save();
 
 // void load_parameters()
 // {
@@ -134,80 +129,4 @@
 //     esp_timer_start_once(save_timer, SAVE_DELAY_MS * 1000);
 // }
 
-// ---------------------------------------------------------
-
-// static int set_ssid_handler(int argc, char **argv) {
-//     if (argc != 2) {
-//         printf("Usage: %s <new_ssid>\n", argv[0]);
-//         return 1;
-//     }
-
-//     const char *new_ssid = argv[1];
-//     size_t ssid_len = strlen(new_ssid);
-    
-//     // Validate SSID length
-//     if (ssid_len >= sizeof(Params.SSID)) {
-//         printf("Error: SSID must be %d characters or less\n", 
-//                sizeof(Params.SSID) - 1);
-//         return 1;
-//     }
-
-//     // Save with existing password
-//     if (save_wifi_credentials(new_ssid, Params.Password) != EXIT_SUCCESS) {
-//         printf("Failed to save SSID to NVS\n");
-//         return 1;
-//     }
-
-//     // Update in-memory parameters
-//     strncpy(Params.SSID, new_ssid, sizeof(Params.SSID));
-//     printf("SSID updated to: %s\n", Params.SSID);
-//     return 0;
-// }
-
-// static int set_password_handler(int argc, char **argv) {
-//     if (argc != 2) {
-//         printf("Usage: %s <new_password>\n", argv[0]);
-//         return 1;
-//     }
-
-//     const char *new_password = argv[1];
-//     size_t pass_len = strlen(new_password);
-    
-//     // Validate password length
-//     if (pass_len >= sizeof(Params.Password)) {
-//         printf("Error: Password must be %d characters or less\n",
-//                sizeof(Params.Password) - 1);
-//         return 1;
-//     }
-
-//     // Save with existing SSID
-//     if (save_wifi_credentials(Params.SSID, new_password) != EXIT_SUCCESS) {
-//         printf("Failed to save password to NVS\n");
-//         return 1;
-//     }
-
-//     // Update in-memory parameters
-//     strncpy(Params.Password, new_password, sizeof(Params.Password));
-//     printf("Password updated successfully\n");
-//     return 0;
-// }
-
-// void register_wifi_commands(void) {
-//     // Register SSID command
-//     const esp_console_cmd_t ssid_cmd = {
-//         .command = "set_ssid",
-//         .help = "Set new WiFi SSID (max 31 chars)",
-//         .hint = "<new_ssid>",
-//         .func = &set_ssid_handler
-//     };
-//     ESP_ERROR_CHECK(esp_console_cmd_register(&ssid_cmd));
-
-//     // Register password command
-//     const esp_console_cmd_t pass_cmd = {
-//         .command = "set_password",
-//         .help = "Set new WiFi password (max 63 chars)",
-//         .hint = "<new_password>",
-//         .func = &set_password_handler
-//     };
-//     ESP_ERROR_CHECK(esp_console_cmd_register(&pass_cmd));
-// }
+// /* --------------------------------------------------------- */

@@ -9,7 +9,6 @@
 
 
 #define EXAMPLE_ESP_MAXIMUM_RETRY 10
-#define STORAGE_NAMESPACE "wifi_config"
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -57,7 +56,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 int save_wifi_credentials(const char *ssid, const char *password)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
+    esp_err_t err = nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
@@ -94,7 +93,7 @@ int save_wifi_credentials(const char *ssid, const char *password)
 int load_wifi_credentials(char *ssid, size_t ssid_size, char *password, size_t pass_size)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(STORAGE_NAMESPACE, NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READONLY, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGW(TAG, "No stored Wi-Fi credentials found.");

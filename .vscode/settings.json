@@ -5,6 +5,15 @@
         "board/esp32s3-builtin.cfg"
     ],
     "files.associations": {
-        "common.h": "c"
+        "common.h": "c",
+        "internet_check.h": "c",
+        "wifi.h": "c",
+        "string.h": "c",
+        "parameters.h": "c",
+        "cmd_system.h": "c",
+        "cmd_wifi.h": "c",
+        "esp_vfs_fat.h": "c",
+        "esp_vfs_dev.h": "c",
+        "cmd_nvs.h": "c"
     }
 }
