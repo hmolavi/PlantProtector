@@ -191,7 +191,7 @@ static void initialize_filesystem(void)
 
 void app_main(void)
 {
-    printf("PlantProtector \n\n");
+    printf("\n    PlantProtector \n\n");
 
     printf("    $$$$$$$\\ $$\\                   $$\\    $$$$$$$\\                    $$\\                        $$\\                        \n");
     printf("    $$  __$$\\$$ |                  $$ |   $$  __$$\\                   $$ |                       $$ |                       \n");
@@ -203,10 +203,10 @@ void app_main(void)
     printf("    \\__|     \\__|\\_______\\__|  \\__| \\____/\\__|     \\__|      \\______/  \\____/ \\_______|\\_______|  \\____/ \\______/\\__|       \n");
     printf("\n\n");
 
-    printf("    Now on \x1b[1mESP32-S3\x1b[0m! \n\n");
+    printf("    Now on \x1b[1mESP32-S3\x1b[0m! \n");
+    printf("\x1b[90m    Copyright (c) 2025 Hossein Molavi | Protecting Plants Worldwide\x1b[0m\n\n");
 
     // Copyright line (dimmed)
-    printf("\x1b[90mCopyright (c) 2025 Hossein Molavi | Protecting Plants Worldwide\x1b[0m\n");
 
 
     register_wifi_commands();
