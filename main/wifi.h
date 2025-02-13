@@ -19,6 +19,8 @@
 #include "lwip/sys.h"
 #include <stddef.h>
 
+#define NETWORK_STORAGE_NAMESPACE "wifi_config"
+
 bool wifiInitialized;
 bool wifiInternetConnected;
 
