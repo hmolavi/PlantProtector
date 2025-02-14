@@ -1,14 +1,14 @@
 ///@file ascii_art.c
 ///@author Hossein Molavi (hmolavi@uwaterloo.ca)
-///@brief 
+///@brief Plant Protector !!!!
 ///@version 1.0
 ///@date 2025-02-13
 ///
 ///@copyright Copyright (c) 2025
 ///
 
-
-void PrintAsciiArt(){
+void PrintAsciiArt()
+{
     printf("\n    PlantProtector \n\n");
     printf("    $$$$$$$\\ $$\\                   $$\\    $$$$$$$\\                    $$\\                        $$\\                        \n");
     printf("    $$  __$$\\$$ |                  $$ |   $$  __$$\\                   $$ |                       $$ |                       \n");

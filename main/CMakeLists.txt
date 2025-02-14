@@ -1,6 +1,8 @@
 idf_component_register(
 					SRCS 
                         wifi.c
+                        commands_registration.c
+                        commands.c
                         internet_check.c
                         app_main.c
                     INCLUDE_DIRS 
@@ -9,9 +11,9 @@ idf_component_register(
                         ../components/cmd_system 
                         ../components/vfs
                         ../components/fatfs
-                        ../components/console_commands
+                        ../components/library
                     REQUIRES 
 						console 
 						nvs_flash 
-						"fatfs"
+						fatfs
 					)

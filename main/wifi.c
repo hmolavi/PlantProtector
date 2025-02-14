@@ -7,24 +7,25 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#include "wifi.h"
+#include "include/wifi.h"
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "esp_console.h"
-#include "esp_log.h"
-#include "private.h"  // Holds the wifi ssid and password
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "esp_system.h"
-#include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
-#include "nvs_flash.h"
-#include "nvs.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+#include "freertos/task.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-#include <stddef.h>
+#include "nvs.h"
+#include "nvs_flash.h"
+#include "private.h"  // Holds the wifi ssid and password
 
 #define MAX_WIFI_RETRY_COUNT 10
 
@@ -106,10 +107,11 @@ int load_wifi_credentials(char *ssid, size_t ssid_size, char *password,
                           size_t pass_size)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err =
-        nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READONLY, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "No stored Wi-Fi credentials found.");
+        ESP_LOGW(TAG, "Storage for (%s) does not exist", NETWORK_STORAGE_NAMESPACE);
+
         return EXIT_FAILURE;
     }
 
@@ -209,8 +211,7 @@ static int connect_wifi_handler(int argc, char **argv)
 
     char ssid[32] = {0};
     char password[64] = {0};
-    int res =
-        load_wifi_credentials(ssid, sizeof(ssid), password, sizeof(password));
+    int res = load_wifi_credentials(ssid, sizeof(ssid), password, sizeof(password));
 
     wifi_config_t wifi_config = {
         .sta =

@@ -15,6 +15,8 @@
 
 #include "esp_console.h"
 
-
+int CmdHello(int argc, char **argv);
+int CmdSsid(int argc, char **argv);
+int CmdPassword(int argc, char **argv);
 
 #endif  // __COMMANDS_REGISTRATION_H__

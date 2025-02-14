@@ -4,6 +4,7 @@
 // #include "nvs.h"
 // #include "esp_log.h"
 // #include "esp_timer.h"
+// #include <stdlib.h>
 
 // #define NAMESPACE "params"
 // #define SAVE_DELAY_MS 5000 // Delay before saving after a change
@@ -15,12 +16,9 @@
 //     char param3[32];
 // } system_params_t;
 
-
-
 // static system_params_t params;
 // static bool params_dirty = false;
 // static esp_timer_handle_t save_timer;
-
 
 // void load_parameters()
 // {

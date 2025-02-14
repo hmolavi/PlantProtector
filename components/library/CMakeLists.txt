@@ -1,11 +1,9 @@
 idf_component_register(
                     SRCS 
-                        console_commands.c
                         parameters.c
                     INCLUDE_DIRS 
                         .
                         ../../main
                     REQUIRES
-                        console
                         nvs_flash
                     )
