@@ -12,14 +12,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "commands.c"
 #include "esp_console.h"
 #include "esp_err.h"
-#include "include/commands.h"
 
 int register_commands(void)
 {
     ADD_CMD("hello", "says hello", "", CmdHello)
     ADD_CMD("ssid", "Set new WiFi SSID", "<new_ssid>", CmdSsid)
     ADD_CMD("password", "Set new WiFi password", "<new_password>", CmdPassword)
+
     return EXIT_SUCCESS;
 }

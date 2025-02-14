@@ -7,7 +7,7 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#include "include/commands.h"
+// #include "include/commands.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +20,7 @@
 
 #define NETWORK_STORAGE_NAMESPACE "wifi_config"
 
-static const char *TAG = "commands.c";
+static const char *TAG = "commands_registration.c";
 
 int CmdHello(int argc, char **argv)
 {
@@ -72,7 +72,7 @@ int CmdPassword(int argc, char **argv)
 {
     if (argc != 2) {
         printf("Usage: %s <new_password>\n", argv[0]);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     const char *new_password = argv[1];

@@ -43,8 +43,7 @@ static const char *TAG = "wifi.c";
 
 static int s_retry_num = 0;
 
-static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data)
+static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
@@ -197,68 +196,4 @@ void wifi_init_sta(const char *ssid, const char *password)
     else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
-}
-
-static int connect_wifi_handler(int argc, char **argv)
-{
-    if (argc != 1) {
-        printf(
-            "Usage: %s\n(No arguments required; uses pre-configured "
-            "SSID/Password)\n",
-            argv[0]);
-        return 1;
-    }
-
-    char ssid[32] = {0};
-    char password[64] = {0};
-    int res = load_wifi_credentials(ssid, sizeof(ssid), password, sizeof(password));
-
-    wifi_config_t wifi_config = {
-        .sta =
-            {
-                .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-                .pmf_cfg = {.capable = true, .required = false},
-            },
-    };
-
-    // Safely copy SSID and Password from Params
-    strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
-    strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
-
-    printf("Configuring WiFi with SSID: %s...\n", wifi_config.sta.ssid);
-
-    // Attempt WiFi connection steps with error handling
-    esp_err_t ret;
-
-    ret = esp_wifi_disconnect();
-    if (ret != ESP_OK && ret != ESP_ERR_WIFI_NOT_INIT) {
-        printf("Disconnect failed: %s\n", esp_err_to_name(ret));
-        return 1;
-    }
-
-    ret = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-    if (ret != ESP_OK) {
-        printf("Set config failed: %s\n", esp_err_to_name(ret));
-        return 1;
-    }
-
-    ret = esp_wifi_connect();
-    if (ret != ESP_OK) {
-        printf("Connection failed: %s\n", esp_err_to_name(ret));
-        return 1;
-    }
-
-    printf("WiFi connection initiated successfully.\n");
-    return 0;
-}
-
-void register_wifi_connect_command(void)
-{
-    esp_console_cmd_t cmd = {
-        .command = "connect_wifi",
-        .help = "Connect to WiFi using pre-configured SSID and password",
-        .hint = NULL,
-        .func = &connect_wifi_handler};
-
-    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd));
 }
