@@ -1,5 +1,6 @@
 idf_component_register(
-					SRCS 
+					SRCS
+                        ascii_art.c
                         wifi.c
                         commands_registration.c
                         commands.c

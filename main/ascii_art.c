@@ -7,6 +7,8 @@
 ///@copyright Copyright (c) 2025
 ///
 
+#include <stdio.h>
+
 void PrintAsciiArt()
 {
     printf("\n    PlantProtector \n\n");

@@ -1,6 +1,6 @@
 ///@file commands_registration.c
 ///@author Hossein Molavi (hmolavi@uwaterloo.ca)
-///@brief
+///@brief Contains implementation for registering commands
 ///@version 1.0
 ///@date 2025-02-13
 ///
