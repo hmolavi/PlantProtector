@@ -5,9 +5,9 @@
  * 
  */
 
-#include "../components/library/common.h"
 #include "esp_log.h"
 #include "internet_check.h"
+#include "private.h" // Holds the wifi ssid and password
 
 static const char *TAG = "internet_check.c";
 
