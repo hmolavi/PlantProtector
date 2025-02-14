@@ -25,6 +25,7 @@
 #include "include/wifi.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "private.h"  // Holds the wifi ssid and password
 
 static const char *TAG = "app_main.c";
 
@@ -81,7 +82,10 @@ void app_main(void)
         printf("LOADED SSID AND PASS from NVS!!\n");
     }
     else {
-        printf("Should use defaults now ...\n");
+        printf("Should use defaults now...");
+        strncpy(ssid, DEFAULT_SSID, sizeof(ssid));
+        strncpy(password, DEFAULT_PASS, sizeof(password));
+        printf("Done\n");
     }
 
     wifi_init_sta(ssid, password);
