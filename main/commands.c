@@ -15,12 +15,13 @@
 
 #include "esp_console.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
 #define NETWORK_STORAGE_NAMESPACE "wifi_config"
 
-static const char *TAG = "commands_registration.c";
+static const char *TAG = "commands.c";
 
 int CmdHello(int argc, char **argv)
 {
@@ -45,8 +46,7 @@ int CmdSsid(int argc, char **argv)
     }
 
     nvs_handle_t nvs_handle;
-    esp_err_t err =
-        nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
+    esp_err_t err = nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
         return EXIT_FAILURE;
@@ -104,4 +104,11 @@ int CmdPassword(int argc, char **argv)
     nvs_close(nvs_handle);
     ESP_LOGI(TAG, "Wi-Fi password saved to NVS");
     return EXIT_SUCCESS;
+}
+
+int CmdReboot(int argc, char **argv)
+{
+    esp_restart();
+    // If board cant reboot means command failed
+    return EXIT_FAILURE;
 }

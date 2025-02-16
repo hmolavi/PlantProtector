@@ -16,11 +16,14 @@
 #include "esp_console.h"
 #include "esp_err.h"
 
+#define COMMANDS_LIST                                                       \
+    CMD("hello", "says hello", "", CmdHello)                                    \
+    CMD("ssid", "Set new WiFi SSID", "<new_ssid>", CmdSsid)                 \
+    CMD("password", "Set new WiFi password", "<new_password>", CmdPassword) \
+    CMD("reset", "Reboot the board", "", CmdReboot)
+
 int register_commands(void)
 {
-    ADD_CMD("hello", "says hello", "", CmdHello)
-    ADD_CMD("ssid", "Set new WiFi SSID", "<new_ssid>", CmdSsid)
-    ADD_CMD("password", "Set new WiFi password", "<new_password>", CmdPassword)
-
+    COMMANDS_LIST
     return EXIT_SUCCESS;
 }
