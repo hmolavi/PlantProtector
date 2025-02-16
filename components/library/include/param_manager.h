@@ -10,7 +10,8 @@
 #define PARAMETER_TABLE                                           \
     PARAM(int32_t, brightness, 50, "brightness duh", Brightness)  \
     PARAM(uint32_t, interval, 1000, "random interval", Internval) \
-    ARRAY(char, 64, ssid, "somessidval_def", "default_ssid", Ssid)
+    ARRAY(char, 64, ssid, "", "WiFi ssid", Ssid)                  \
+    ARRAY(char, 64, password, "", "WiFi password", Password)
 
 #define PARAM(type_, name_, default_value_, description_, pn) \
     struct {                                                  \

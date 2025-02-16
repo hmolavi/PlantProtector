@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../components/library/include/param_manager.h"
 #include "esp_console.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -25,9 +26,8 @@
 #include "lwip/sys.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "private.h"  // Holds the wifi ssid and password
 
-#define MAX_WIFI_RETRY_COUNT 10
+#define MAX_WIFI_RETRY_COUNT 3
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -68,73 +68,11 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-int save_wifi_credentials(const char *ssid, const char *password)
+void wifi_init_sta()
 {
-    nvs_handle_t nvs_handle;
-    esp_err_t err =
-        nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Error (%s) opening NVS handle!", esp_err_to_name(err));
-        return EXIT_FAILURE;
-    }
+    const char *ssid = Param_GetPassword();
+    const char *password = Param_GetPassword();
 
-    // Save SSID and password
-    err = nvs_set_str(nvs_handle, "ssid", ssid);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to save SSID!");
-    }
-
-    err = nvs_set_str(nvs_handle, "password", password);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to save password!");
-    }
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to commit changes in NVS!");
-    }
-
-    nvs_close(nvs_handle);
-    ESP_LOGI(TAG, "Wi-Fi credentials saved to NVS");
-
-    return EXIT_SUCCESS;
-}
-
-/**
- * @brief Reads Wi-Fi credentials from NVS
- */
-int load_wifi_credentials(char *ssid, size_t ssid_size, char *password,
-                          size_t pass_size)
-{
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open(NETWORK_STORAGE_NAMESPACE, NVS_READONLY, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGW(TAG, "No stored Wi-Fi credentials found.");
-        ESP_LOGW(TAG, "Storage for (%s) does not exist", NETWORK_STORAGE_NAMESPACE);
-
-        return EXIT_FAILURE;
-    }
-
-    // Read SSID
-    err = nvs_get_str(nvs_handle, "ssid", ssid, &ssid_size);
-    if (err != ESP_OK) {
-        ESP_LOGW(TAG, "No SSID found in NVS, using default.");
-        strncpy(ssid, DEFAULT_SSID, ssid_size);
-    }
-
-    // Read Password
-    err = nvs_get_str(nvs_handle, "password", password, &pass_size);
-    if (err != ESP_OK) {
-        ESP_LOGW(TAG, "No password found in NVS, using default.");
-        strncpy(password, DEFAULT_PASS, pass_size);
-    }
-
-    nvs_close(nvs_handle);
-    ESP_LOGI(TAG, "Loaded SSID: %s", ssid);
-    return EXIT_SUCCESS;
-}
-
-void wifi_init_sta(const char *ssid, const char *password)
-{
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());

@@ -16,6 +16,7 @@
 #include "esp_console.h"
 #include "esp_err.h"
 
+// TODO: Fix the helpers printing
 #define COMMANDS_LIST                                                       \
     CMD("hello", "says hello", "", CmdHello)                                    \
     CMD("ssid", "Set new WiFi SSID", "<new_ssid>", CmdSsid)                 \
