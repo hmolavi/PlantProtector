@@ -52,13 +52,31 @@ void app_main(void)
     param_manager_init();
 
     // Read parameter with code completion
-    printf("Brightness: %d\n", get_brightness());
+    printf("Brightness upon wake: %d\n",  Param_GetBrightness());
 
     // Set parameter with type safety
-    int new_brightness = 75;
-    set_brightness(new_brightness);
+    int new_brightness = Param_GetBrightness() + 10;
+    Param_SetBrightness(new_brightness);
 
-    printf("Brightness2: %d\n", get_brightness());
+    printf("Brightness+10: %d\n", Param_GetBrightness());
+
+    char *ssid_p = Param_GetSsid();
+    if (ssid_p != NULL) {
+        printf("Ssid upon wake: %s\n", ssid_p);
+
+        // Add one char to the ssid and set the value
+        size_t ssid_len = strlen(ssid_p);
+        if (ssid_len < 31) { // Ensure there is space for one more character and null terminator
+            ssid_p[ssid_len] = 'X'; // Add 'X' to the end of ssid
+            ssid_p[ssid_len + 1] = '\0'; // Null terminate the string
+            Param_SetSsid(ssid_p); // Set the new ssid value
+            printf("Ssid+X: %s\n", Param_GetSsid());
+        } else {
+            printf("SSID length is too long to add a character\n");
+        }
+    } else {
+        printf("Failed to get ssid upon wake\n");
+    }
 
 
     /////////////////////////////////////////////////
