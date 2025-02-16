@@ -3,13 +3,13 @@
 #include <stdint.h>
 #include <string.h>
 
-///@brief Setting up the program variable parameters. Format is
-///     (type, variable name, default value, description),
-///     For arrays, you must set the max length as well.
+///@brief Program variable parameters. Format is
+///       (type, variable name, default value, description),
+///       For arrays, you must set the max length as well.
 #define PARAMETER_TABLE                                \
     PARAM(int32_t, brightness, 50, "brightness duh")   \
     PARAM(uint32_t, interval, 1000, "random interval") \
-    ARRAY(char, 64, ssid, "", "default_ssid")
+    ARRAY(char, 64, ssid, "somessidval_def", "default_ssid")
 
 #define PARAM(type_, name_, default_value_, description_) \
     struct {                                              \

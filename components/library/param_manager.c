@@ -73,31 +73,33 @@ static void save_dirty_parameters(void)
     int parametersChanged;
     parametersChanged = 0;
 
-#define PARAM(type_, name_, default_value_, description_)                                              \
-    if (g_params.name_.dirty) {                                                                        \
-        err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, sizeof(g_params.name_)); \
-        if (err != ESP_OK) {                                                                           \
-            ESP_LOGE(TAG, "Failed to set blob for: %s\n", g_params.name_.name);                        \
-        }                                                                                              \
-        g_params.name_.dirty = false;                                                                  \
-        parametersChanged++;                                                                           \
+#define PARAM(type_, name_, default_value_, description_)                                            \
+    if (g_params.name_.dirty) {                                                                      \
+        size_t name_##required_size = sizeof(g_params.name_.value);                                        \
+        err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
+        if (err != ESP_OK) {                                                                         \
+            printf("Failed to set blob for: %s\n", g_params.name_.name);                             \
+        }                                                                                            \
+        g_params.name_.dirty = false;                                                                \
+        parametersChanged++;                                                                         \
     }
-#define ARRAY(type_, size_, name_, default_value_, description_)                                       \
-    if (g_params.name_.dirty) {                                                                        \
-        err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, sizeof(g_params.name_)); \
-        if (err != ESP_OK) {                                                                           \
-            ESP_LOGE(TAG, "Failed to set blob for: %s\n", g_params.name_.name);                        \
-        }                                                                                              \
-        g_params.name_.dirty = false;                                                                  \
-        parametersChanged++;                                                                           \
+#define ARRAY(type_, size_, name_, default_value_, description_)                                     \
+    if (g_params.name_.dirty) {                                                                      \
+        size_t name_##required_size = sizeof(g_params.name_.value);                                        \
+        err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
+        if (err != ESP_OK) {                                                                         \
+            printf("Failed to set blob for: %s\n", g_params.name_.name);                             \
+        }                                                                                            \
+        g_params.name_.dirty = false;                                                                \
+        parametersChanged++;                                                                         \
     }
     PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
-    if (parametersChanged) {
-        ESP_LOGI(TAG, "%d parameters edited. Committing to flash...", parametersChanged);
+    if (parametersChanged > 0) {
+        printf("%d parameters edited. Committing to flash...", parametersChanged);
         err = nvs_commit(handle);
-        ESP_LOGI(TAG, "%s\n", (err != ESP_OK) ? "Failed" : "Done");
+        printf("%s\n", (err != ESP_OK) ? "Failed" : "Done");
     }
     nvs_close(handle);
 }
@@ -116,18 +118,25 @@ void param_manager_init(void)
 
     nvs_handle_t handle;
     if (nvs_open("storage", NVS_READWRITE, &handle) == ESP_OK) {
-#define PARAM(type_, name_, default_value_, description_)                                       \
-    size_t name_##required_size = sizeof(g_params.name_);                                       \
-    if (nvs_get_blob(handle, #name_, &g_params.name_.value, &name_##required_size) != ESP_OK) { \
-        g_params.name_.value = g_params.name_.defaultValue;                                     \
-        g_params.name_.dirty = true;                                                            \
+#define PARAM(type_, name_, default_value_, description_)                                                   \
+    size_t name_##required_size = sizeof(g_params.name_.value);                                                   \
+    if (nvs_get_blob(handle, g_params.name_.key, &g_params.name_.value, &name_##required_size) != ESP_OK) { \
+        g_params.name_.value = g_params.name_.defaultValue;                                                 \
+        g_params.name_.dirty = true;                                                                        \
+    }                                                                                                       \
+    else {                                                                                                  \
+        g_params.name_.dirty = false;                                                                       \
     }
-#define ARRAY(type_, size_, name_, default_value_, description_)                                \
-    size_t name_##required_size = sizeof(g_params.name_);                                       \
-    if (nvs_get_blob(handle, #name_, &g_params.name_.value, &name_##required_size) != ESP_OK) { \
-        memcpy(&g_params.name_.value, &g_params.name_.defaultValue, size_ * sizeof(type_));     \
-        g_params.name_.dirty = true;                                                            \
+#define ARRAY(type_, size_, name_, default_value_, description_)                                            \
+    size_t name_##required_size = sizeof(g_params.name_.value);                                                   \
+    if (nvs_get_blob(handle, g_params.name_.key, &g_params.name_.value, &name_##required_size) != ESP_OK) { \
+        memcpy(&g_params.name_.value, &g_params.name_.defaultValue, size_ * sizeof(type_));                 \
+        g_params.name_.dirty = true;                                                                        \
+    }                                                                                                       \
+    else {                                                                                                  \
+        g_params.name_.dirty = false;                                                                       \
     }
+
         PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
