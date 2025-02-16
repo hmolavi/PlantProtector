@@ -97,7 +97,7 @@ static void save_dirty_parameters(void)
 #undef PARAM
 #undef ARRAY
     if (parametersChanged > 0) {
-        printf("%d parameters edited. Committing to flash...", parametersChanged);
+        printf("%d dirty parameters committing to flash...", parametersChanged);
         err = nvs_commit(handle);
         printf("%s\n", (err != ESP_OK) ? "Failed" : "Done");
     }
