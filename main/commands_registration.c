@@ -18,7 +18,7 @@
 
 // TODO: Fix the helpers printing
 #define COMMANDS_LIST                                                       \
-    CMD("hello", "says hello", "", CmdHello)                                    \
+    CMD("hello", "says hello", "", CmdHello)                                \
     CMD("ssid", "Set new WiFi SSID", "<new_ssid>", CmdSsid)                 \
     CMD("password", "Set new WiFi password", "<new_password>", CmdPassword) \
     CMD("reset", "Reboot the board", "", CmdReboot)
