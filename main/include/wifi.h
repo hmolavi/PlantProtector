@@ -14,6 +14,6 @@
 
 #define NETWORK_STORAGE_NAMESPACE "wifi_config"
 
-void wifi_init_sta();
+void Wifi_InitSta();
 
 #endif  // __WIFI_H__

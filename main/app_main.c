@@ -21,7 +21,6 @@
 #include "esp_vfs_dev.h"
 #include "esp_vfs_fat.h"
 #include "include/commands_registration.h"
-#include "include/internet_check.h"
 #include "include/parameters.h"
 #include "include/wifi.h"
 #include "nvs.h"
@@ -62,14 +61,14 @@ void app_main(void)
 
     char *ssid = Param_GetSsid();
     char *default_ssid = DEFAULT_SSID;
-    printf("ssid: (%s)->(%s) \n", ssid, default_ssid);
+    printf("ssid: (%s) -> (%s) \n", ssid, default_ssid);
     if (ssid != default_ssid) {
         Param_SetSsid(default_ssid);
     }
 
     char *password = Param_GetPassword();
     char *default_password = DEFAULT_PASS;
-    printf("password: (%s)->(%s) \n", password, default_password);
+    printf("password: (%s) -> (%s) \n", password, default_password);
     if (password != default_password) {
         Param_SetPassword(default_password);
     }
@@ -96,6 +95,5 @@ void app_main(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 
-    wifi_init_sta();
-    check_internet_connection();
+    Wifi_InitSta();
 }
