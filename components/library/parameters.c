@@ -1,13 +1,14 @@
 // #include <stdio.h>
+// #include <stdlib.h>
 // #include <string.h>
-// #include "nvs_flash.h"
-// #include "nvs.h"
+
 // #include "esp_log.h"
 // #include "esp_timer.h"
-// #include <stdlib.h>
+// #include "nvs.h"
+// #include "nvs_flash.h"
 
 // #define NAMESPACE "params"
-// #define SAVE_DELAY_MS 5000 // Delay before saving after a change
+// #define SAVE_DELAY_MS 5000  // Delay before saving after a change
 
 // typedef struct
 // {
@@ -23,8 +24,7 @@
 // void load_parameters()
 // {
 //     esp_err_t err = nvs_flash_init();
-//     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
-//     {
+//     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
 //         ESP_ERROR_CHECK(nvs_flash_erase());
 //         err = nvs_flash_init();
 //     }
@@ -32,8 +32,7 @@
 
 //     nvs_handle_t nvs_handle;
 //     err = nvs_open(NAMESPACE, NVS_READWRITE, &nvs_handle);
-//     if (err != ESP_OK)
-//     {
+//     if (err != ESP_OK) {
 //         ESP_LOGE("NVS", "Error opening NVS!");
 //         return;
 //     }
@@ -56,8 +55,7 @@
 
 // void set_param1(int value)
 // {
-//     if (params.param1 != value)
-//     {
+//     if (params.param1 != value) {
 //         params.param1 = value;
 //         params_dirty = true;
 //         schedule_save();
@@ -66,8 +64,7 @@
 
 // void set_param2(float value)
 // {
-//     if (params.param2 != value)
-//     {
+//     if (params.param2 != value) {
 //         params.param2 = value;
 //         params_dirty = true;
 //         schedule_save();
@@ -76,8 +73,7 @@
 
 // void set_param3(const char *value)
 // {
-//     if (strcmp(params.param3, value) != 0)
-//     {
+//     if (strcmp(params.param3, value) != 0) {
 //         strncpy(params.param3, value, sizeof(params.param3));
 //         params_dirty = true;
 //         schedule_save();
@@ -91,8 +87,7 @@
 
 //     nvs_handle_t nvs_handle;
 //     esp_err_t err = nvs_open(NAMESPACE, NVS_READWRITE, &nvs_handle);
-//     if (err != ESP_OK)
-//     {
+//     if (err != ESP_OK) {
 //         ESP_LOGE("NVS", "Failed to open NVS for writing");
 //         return;
 //     }
@@ -119,8 +114,7 @@
 //         .callback = &save_timer_callback,
 //         .name = "param_save_timer"};
 
-//     if (save_timer == NULL)
-//     {
+//     if (save_timer == NULL) {
 //         esp_timer_create(&timer_args, &save_timer);
 //     }
 

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../components/library/include/param_manager.h"
 #include "ascii_art.c"
 #include "cmd_nvs.h"
 #include "cmd_system.h"
@@ -29,30 +30,38 @@
 
 static const char *TAG = "app_main.c";
 
-typedef enum DataTypes_e {
-    type_char,
-    type_int,
-    type_float,
-} DataTypes_t;
-
-static void initialize_nvs(void)
-{
-    esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
-        err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        err = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(err);
-}
+// static void initialize_nvs(void)
+// {
+//     esp_err_t err = nvs_flash_init();
+//     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
+//         err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+//         ESP_ERROR_CHECK(nvs_flash_erase());
+//         err = nvs_flash_init();
+//     }
+//     ESP_ERROR_CHECK(err);
+// }
 
 void app_main(void)
 {
+    ESP_LOGI(TAG, "Starting up...");
+
     PrintAsciiArt();
 
     // Initialize NVS
-    initialize_nvs();
+    // initialize_nvs();
+    param_manager_init();
 
+    // Read parameter with code completion
+    printf("Brightness: %d\n", get_brightness());
+
+    // Set parameter with type safety
+    int new_brightness = 75;
+    set_brightness(new_brightness);
+
+    printf("Brightness2: %d\n", get_brightness());
+
+
+    /////////////////////////////////////////////////
     printf("---CMD SHOULD BE INTERACTIVE FROM HERE\n");
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
