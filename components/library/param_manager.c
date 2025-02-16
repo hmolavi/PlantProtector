@@ -43,22 +43,26 @@ struct ParamMasterControl g_params = {
 #define PARAM(type, name, default, description, pn) \
     void Param_Set##pn(const type value)            \
     {                                               \
-        g_params.name.value = value;                \
-        g_params.name.dirty = true;                 \
+        if (g_params.name.value != value) {         \
+            g_params.name.value = value;            \
+            g_params.name.dirty = true;             \
+        }                                           \
     }                                               \
     type Param_Get##pn(void)                        \
     {                                               \
         return g_params.name.value;                 \
     }
-#define ARRAY(type, size, name, default, description, pn)         \
-    void Param_Set##pn(const type* value)                         \
-    {                                                             \
-        memcpy(&g_params.name.value, value, size * sizeof(type)); \
-        g_params.name.dirty = true;                               \
-    }                                                             \
-    type* Param_Get##pn(void)                                     \
-    {                                                             \
-        return g_params.name.value;                               \
+#define ARRAY(type, size, name, default, description, pn)                    \
+    void Param_Set##pn(const type* value)                                    \
+    {                                                                        \
+        if (memcmp(&g_params.name.value, value, size * sizeof(type)) != 0) { \
+            memcpy(&g_params.name.value, value, size * sizeof(type));        \
+            g_params.name.dirty = true;                                      \
+        }                                                                    \
+    }                                                                        \
+    type* Param_Get##pn(void)                                                \
+    {                                                                        \
+        return g_params.name.value;                                          \
     }
 PARAMETER_TABLE
 #undef PARAM

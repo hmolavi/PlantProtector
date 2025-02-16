@@ -70,7 +70,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
 
 void wifi_init_sta()
 {
-    const char *ssid = Param_GetPassword();
+    const char *ssid = Param_GetSsid();
     const char *password = Param_GetPassword();
 
     s_wifi_event_group = xEventGroupCreate();
