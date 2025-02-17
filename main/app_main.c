@@ -7,19 +7,21 @@
 ///@copyright Copyright (c) 2025
 ///
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../components/library/include/param_manager.h"
-#include "ascii_art.c"
 #include "cmd_nvs.h"
 #include "cmd_system.h"
 #include "esp_console.h"
+#include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_vfs_dev.h"
 #include "esp_vfs_fat.h"
+#include "include/ascii_art.h"
 #include "include/commands_registration.h"
 #include "include/parameters.h"
 #include "include/wifi.h"
@@ -42,16 +44,33 @@ static const char *TAG = "app_main.c";
 
 void app_main(void)
 {
-    ESP_LOGI(TAG, "Starting up...");
+    ESP_LOGI(TAG, "Starting up...\n");
 
     PrintAsciiArt();
 
     // Initialize NVS
-    // initialize_nvs();
-    param_manager_init();
+    Param_ManagerInit();
+
+    const char *ssid = Param_GetSsid(NULL);
+    char *default_ssid = DEFAULT_SSID;
+    if (strcmp(ssid, default_ssid) != 0) {
+        printf("ssid: (%s) -> (%s): ", ssid, default_ssid);
+        esp_err_t err = Param_SetSsid(default_ssid, strlen(default_ssid));
+        printf("%s\n", (err != ESP_OK) ? "Failed" : "Done");
+    }
+
+    const char *password = Param_GetPassword(NULL);
+    char *default_password = DEFAULT_PASS;
+    if (strcmp(password, default_password) != 0) {
+        printf("password: (%s) -> (%s): \n", password, default_password);
+        esp_err_t err = Param_SetPassword(default_password, strlen(default_password));
+        printf("%s\n", (err != ESP_OK) ? "Failed" : "Done");
+    }
+
+    /////////////////////////////////////////////////
 
     // Read parameter with code completion
-    printf("Brightness upon wake: %d\n",  Param_GetBrightness());
+    printf("Brightness upon wake: %d\n", Param_GetBrightness());
 
     // Set parameter with type safety
     int new_brightness = Param_GetBrightness() + 10;
@@ -59,22 +78,32 @@ void app_main(void)
 
     printf("Brightness+10: %d\n", Param_GetBrightness());
 
-    char *ssid = Param_GetSsid();
-    char *default_ssid = DEFAULT_SSID;
-    printf("ssid: (%s) -> (%s) \n", ssid, default_ssid);
-    if (ssid != default_ssid) {
-        Param_SetSsid(default_ssid);
+    size_t num_elements;
+    const int *my_int_arr2 = Param_GetMyArray(&num_elements);
+
+    printf("Array elements: ");
+    for (int i = 0; i < num_elements; i++) {
+        printf("%d ", my_int_arr2[i]);
+    }
+    printf("\n");
+
+    int local_copy[4];
+    ESP_ERROR_CHECK(Param_CopyMyArray(local_copy, sizeof(local_copy)));
+
+    for (int i = 0; i < 4; i++) {
+        local_copy[i] += 5;
     }
 
-    char *password = Param_GetPassword();
-    char *default_password = DEFAULT_PASS;
-    printf("password: (%s) -> (%s) \n", password, default_password);
-    if (password != default_password) {
-        Param_SetPassword(default_password);
+    printf("update elements: ");
+    for (int i = 0; i < num_elements; i++) {
+        printf("%d ", local_copy[i]);
     }
+    printf("\n");
+
+    ESP_ERROR_CHECK(Param_SetMyArray(local_copy, num_elements));
 
     /////////////////////////////////////////////////
-    printf("---CMD SHOULD BE INTERACTIVE FROM HERE\n");
+    printf("\n\n\n");
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
     repl_config.prompt = "PlantProtector>";
@@ -85,7 +114,7 @@ void app_main(void)
     esp_console_register_help_command();
     register_system();
     register_nvs();
-    register_commands();
+    CMD_CommandsInit();
     printf("Done\n");
 
     esp_console_dev_uart_config_t hw_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();

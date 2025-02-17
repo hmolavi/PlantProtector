@@ -17,13 +17,15 @@
 #include "esp_err.h"
 
 // TODO: Fix the helpers printing
-#define COMMANDS_LIST                                                       \
-    CMD("hello", "says hello", "", CmdHello)                                \
-    CMD("ssid", "Set new WiFi SSID", "<new_ssid>", CmdSsid)                 \
-    CMD("password", "Set new WiFi password", "<new_password>", CmdPassword) \
-    CMD("reset", "Reboot the board", "", CmdReboot)
+#define COMMANDS_LIST                                                        \
+    CMD("art", "print Plant Protector ascii art", "", Cmd_Art)               \
+    CMD("ssid", "Set new WiFi SSID", "<new_ssid>", Cmd_Ssid)                 \
+    CMD("password", "Set new WiFi password", "<new_password>", Cmd_Password) \
+    CMD("reset", "Reboot the board", "", Cmd_Reboot)                         \
+    CMD("connect", "Attempt to connect to wifi", "", Cmd_Connect)            \
+    CMD("save", "Save the dirty parameters", "", Cmd_Save)
 
-int register_commands(void)
+int CMD_CommandsInit(void)
 {
     COMMANDS_LIST
     return EXIT_SUCCESS;

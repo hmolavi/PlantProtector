@@ -4,7 +4,6 @@ idf_component_register(
                         wifi.c
                         commands_registration.c
                         commands.c
-                        internet_check.c
                         app_main.c
                     INCLUDE_DIRS 
 						.

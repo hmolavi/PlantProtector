@@ -11,7 +11,6 @@
 
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,20 +18,13 @@
 #include <unistd.h>
 
 #include "../components/library/include/param_manager.h"
-#include "esp_console.h"
 #include "esp_event.h"
 #include "esp_log.h"
-#include "esp_system.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "freertos/task.h"
-#include "lwip/err.h"
-#include "lwip/sys.h"
-#include "nvs.h"
-#include "nvs_flash.h"
 
-#define MAX_WIFI_RETRY_COUNT 3
+#define MAX_WIFI_RETRY_COUNT 1
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -73,7 +65,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-int check_connection_to_host(const char *host)
+static int check_connection_to_host(const char *host)
 {
     struct sockaddr_in server_addr;
     char response[1024];
@@ -82,7 +74,7 @@ int check_connection_to_host(const char *host)
     struct hostent *server = gethostbyname(host);
     if (!server) {
         ESP_LOGE(TAG, "Failed to resolve host: %s", host);
-        return EXIT_FAILURE;
+        return ESP_FAIL;
     }
 
     // Setup server address
@@ -95,7 +87,7 @@ int check_connection_to_host(const char *host)
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         ESP_LOGE(TAG, "Failed to create socket.");
-        return EXIT_FAILURE;
+        return ESP_FAIL;
     }
 
     struct timeval timeout = {5, 0};  // 5 seconds timeout
@@ -105,7 +97,7 @@ int check_connection_to_host(const char *host)
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         ESP_LOGE(TAG, "Failed to connect to server: %s", host);
         close(sockfd);
-        return EXIT_FAILURE;
+        return ESP_FAIL;
     }
 
     // Send HTTP request
@@ -120,7 +112,7 @@ int check_connection_to_host(const char *host)
     if (send(sockfd, request, strlen(request), 0) < 0) {
         ESP_LOGE(TAG, "Failed to send HTTP request to server: %s", host);
         close(sockfd);
-        return EXIT_FAILURE;
+        return ESP_FAIL;
     }
 
     // Receive response
@@ -140,15 +132,15 @@ int check_connection_to_host(const char *host)
 
             // As long as they respond, dont care what the HTTP is
             // ESP_LOGI(TAG, "%s responded with HTTP status: %s", host, response_code);
-            return EXIT_SUCCESS;
+            return ESP_OK;
         }
     }
 
     ESP_LOGE(TAG, "No response or invalid HTTP response from %s", host);
-    return EXIT_FAILURE;
+    return ESP_FAIL;
 }
 
-int check_internet_connection()
+static int check_internet_connection()
 {
     const char *reliable_hosts[] = {
         "www.amazon.com",
@@ -161,20 +153,22 @@ int check_internet_connection()
     size_t num_hosts = sizeof(reliable_hosts) / sizeof(reliable_hosts[0]);
 
     for (size_t i = 0; i < num_hosts; i++) {
-        if (check_connection_to_host(reliable_hosts[i]) == EXIT_SUCCESS) {
+        if (check_connection_to_host(reliable_hosts[i]) == ESP_OK) {
             ESP_LOGI(TAG, "Internet connection verified with %s", reliable_hosts[i]);
-            return EXIT_SUCCESS;
+            return ESP_OK;
         }
     }
 
     ESP_LOGE(TAG, "Failed to verify internet connection.");
-    return EXIT_FAILURE;
+    return ESP_FAIL;
 }
 
+/// @brief Initialise the wifi settings and try to connect to wifi
 void Wifi_InitSta()
 {
-    const char *ssid = Param_GetSsid();
-    const char *password = Param_GetPassword();
+    wifiConnected = false;
+    const char *ssid = Param_GetSsid(NULL);
+    const char *password = Param_GetPassword(NULL);
 
     s_wifi_event_group = xEventGroupCreate();
 
@@ -208,8 +202,7 @@ void Wifi_InitSta()
     };
 
     strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
-    strncpy((char *)wifi_config.sta.password, password,
-            sizeof(wifi_config.sta.password));
+    strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
@@ -229,13 +222,63 @@ void Wifi_InitSta()
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we
      * can test which event actually happened. */
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s", ssid);
-        check_internet_connection();
+        ESP_LOGI(TAG, "connected to ap SSID: (%s)", ssid);
+        if (check_internet_connection() == ESP_OK)
+            wifiConnected = true;
+        else
+            wifiConnected = false;
     }
     else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", ssid, password);
+        ESP_LOGI(TAG, "Failed to connect to SSID: (%s), password: (%s)", ssid, password);
+        wifiConnected = false;
     }
     else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
+        wifiConnected = false;
     }
+}
+
+/// @brief Clears the failed attempts and retries to connect to wifi
+void WIFI_TryConnect()
+{
+    if (wifiConnected == true)
+        esp_wifi_disconnect();
+
+    s_retry_num = 0;
+    ESP_LOGI(TAG, "Resetting WiFi retries and attempting to reconnect.");
+
+    const char *ssid = Param_GetSsid(NULL);
+    const char *password = Param_GetPassword(NULL);
+
+    wifi_config_t wifi_config = {
+        .sta =
+            {
+                .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+                .pmf_cfg = {.capable = true, .required = false},
+            },
+    };
+
+    strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
+    strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    esp_wifi_connect();
+
+    // Clear the event group bits before waiting for connection
+    xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
+
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE,
+                                           pdFALSE,
+                                           portMAX_DELAY);
+
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG, "connected to ap SSID: (%s)", ssid);
+        check_internet_connection();
+    }
+    else if (bits & WIFI_FAIL_BIT)
+        ESP_LOGI(TAG, "Failed to connect to SSID: (%s), password: (%s)", ssid, password);
+    else
+        ESP_LOGE(TAG, "UNEXPECTED EVENT during reconnection.");
 }

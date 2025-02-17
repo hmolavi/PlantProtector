@@ -7,6 +7,8 @@
 ///@copyright Copyright (c) 2025
 ///
 
+#include "include/ascii_art.h"
+
 #include <stdio.h>
 
 void PrintAsciiArt()

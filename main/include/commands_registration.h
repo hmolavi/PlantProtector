@@ -11,18 +11,18 @@
 
 #include "esp_console.h"
 
-#define CMD(name, helptxt, hinttxt, function) \
-    char helptxt_##function[] = helptxt;                \
-    char hinttxt_##function[] = hinttxt;                \
-    const esp_console_cmd_t console_cmd_##function = {  \
-        .command = name,                                \
-        .help = helptxt_##function,                     \
-        .hint = hinttxt_##function,                     \
-        .func = &function};                             \
+#define CMD(name, helptxt, hinttxt, function)          \
+    char helptxt_##function[] = helptxt;               \
+    char hinttxt_##function[] = hinttxt;               \
+    const esp_console_cmd_t console_cmd_##function = { \
+        .command = name,                               \
+        .help = helptxt_##function,                    \
+        .hint = hinttxt_##function,                    \
+        .func = &function};                            \
     ESP_ERROR_CHECK(esp_console_cmd_register(&console_cmd_##function));
 
 /// @brief Initializes all of the command-line-commands
-int register_commands(void);
+int CMD_CommandsInit(void);
 
 #endif  // __COMMANDS_REGISTRATION_H__
 
