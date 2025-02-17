@@ -19,11 +19,11 @@
 ///       (type, variable name, default value, description,
 ///       PascalName). For arrays, you must set the max
 ///       length as well.
-#define PARAMETER_TABLE                                           \
-    PARAM(int32_t, brightness, 50, "brightness duh", Brightness)  \
-    PARAM(uint32_t, interval, 1000, "random interval", Internval) \
-    ARRAY(char, 32, ssid, "", "WiFi ssid", Ssid)                  \
-    ARRAY(char, 64, password, "", "WiFi password", Password)      \
+#define PARAMETER_TABLE                                              \
+    PARAM(int32_t, brightness, 50, "brightness duh", Brightness)     \
+    PARAM(uint32_t, interval, 1000, "random interval", Internval)    \
+    ARRAY(char, 32, ssid, "fakessid", "WiFi ssid", Ssid)             \
+    ARRAY(char, 64, password, "fakepass", "WiFi password", Password) \
     ARRAY(int, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray)
 
 #define PARAM(type_, name_, default_value_, description_, pn) \
