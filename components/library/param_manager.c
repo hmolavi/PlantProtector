@@ -1,4 +1,12 @@
-// param_manager.c
+///@file param_manager.c
+///@author Hossein Molavi (hmolavi@uwaterloo.ca)
+///
+///@version 1.0
+///@date 2025-02-16
+///
+///@copyright Copyright (c) 2025
+///
+
 #include "include/param_manager.h"
 
 #include <stdbool.h>
