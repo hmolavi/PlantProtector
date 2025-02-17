@@ -26,5 +26,8 @@ WIP: Parameters to save to sd card
 
 ## Personal Notes, delete before launch
 Read from right to left  
+
 int const *ptr; // ptr is a pointer to constant int  
+const int *ptr // ptr is a pointer to constant int  
+
 int *const ptr; // ptr is a constant pointer to int  
