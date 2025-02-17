@@ -78,8 +78,8 @@ struct ParamMasterControl g_params = {
         if (length > size_) {                                                                \
             return ESP_ERR_INVALID_SIZE;                                                     \
         }                                                                                    \
-        if (memcmp(&g_params.name_.value, value, length * sizeof(type_)) != 0) {             \
-            memcpy(&g_params.name_.value, value, length * sizeof(type_));                    \
+        if (memcmp(&g_params.name_.value, value, size_ * sizeof(type_)) != 0) {              \
+            memcpy(&g_params.name_.value, value, size_ * sizeof(type_));                     \
             g_params.name_.dirty = true;                                                     \
             return ESP_OK;                                                                   \
         }                                                                                    \
@@ -119,7 +119,7 @@ void Param_SaveDirtyParameters(void)
 
 #define PARAM(type_, name_, default_value_, description_, pn)                                        \
     if (g_params.name_.dirty) {                                                                      \
-        size_t name_##required_size = sizeof(g_params.name_.value);                                  \
+        size_t name_##required_size = sizeof(type_);                                                 \
         err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
         if (err != ESP_OK) ESP_LOGE(TAG, "Failed to set blob for: %s\n", g_params.name_.name);       \
         g_params.name_.dirty = false;                                                                \
@@ -127,7 +127,7 @@ void Param_SaveDirtyParameters(void)
     }
 #define ARRAY(type_, size_, name_, default_value_, description_, pn)                                 \
     if (g_params.name_.dirty) {                                                                      \
-        size_t name_##required_size = sizeof(g_params.name_.value);                                  \
+        size_t name_##required_size = size_ * sizeof(type_);                                         \
         err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
         if (err != ESP_OK) ESP_LOGE(TAG, "Failed to set blob for: %s\n", g_params.name_.name);       \
         g_params.name_.dirty = false;                                                                \
