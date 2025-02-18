@@ -222,3 +222,66 @@
     
 // //     return 0;
 // // }
+
+
+
+// // // Edit command for console:
+// typedef enum {
+//     PARAM_TYPE_INT32,
+//     PARAM_TYPE_UINT32,
+//     PARAM_TYPE_CHAR_ARRAY,
+//     PARAM_TYPE_INT_ARRAY,
+//     // ... add more types as needed
+// } EParamType_t;
+
+// typedef struct {
+//     const char* name;
+//     EParamType_t type;
+//     void* value;       // pointer to the parameter value in g_params
+//     size_t size;       // For arrays, size in elements; for strings, max length; for others, size of data type
+//     bool* dirty_flag;  // pointer to the dirty flag
+// } ParamDescriptor_t;
+
+// ParamDescriptor_t g_param_descriptors[] = {
+//     {"brightness", PARAM_TYPE_INT32, &g_params.brightness_.value, sizeof(g_params.brightness_.value), &g_params.brightness_.dirty},
+//     {"interval", PARAM_TYPE_UINT32, &g_params.interval_.value, sizeof(g_params.interval_.value), &g_params.interval_.dirty},
+//     {"ssid", PARAM_TYPE_CHAR_ARRAY, g_params.ssid_.value, g_params.ssid_.size, &g_params.ssid_.dirty},
+//     {"password", PARAM_TYPE_CHAR_ARRAY, g_params.password_.value, g_params.password_.size, &g_params.password_.dirty},
+//     {"myarray", PARAM_TYPE_INT_ARRAY, g_params.myarray_.value, g_params.myarray_.size, &g_params.myarray_.dirty},
+// };
+
+// /// @brief Edit a parameter by name
+// /// @param name name of the parameter you want to edit
+// /// @param new_value value of the parameter
+// /// @return esp_err code
+// esp_err_t Param_Edit(char* name, void* new_value);
+
+// esp_err_t Param_Edit(const char* name, void* new_value)
+// {
+//     for (size_t i = 0; i < sizeof(g_param_descriptors) / sizeof(ParamDescriptor_t); i++) {
+//         if (strcmp(name, g_param_descriptors[i].name) == 0) {
+//             switch (g_param_descriptors[i].type) {
+//                 case PARAM_TYPE_INT32:
+//                     *((int32_t*)g_param_descriptors[i].value) = *((int32_t*)new_value);
+//                     break;
+//                 case PARAM_TYPE_UINT32:
+//                     *((uint32_t*)g_param_descriptors[i].value) = *((uint32_t*)new_value);
+//                     break;
+//                 case PARAM_TYPE_CHAR_ARRAY:
+//                     // Assuming new_value is a null-terminated string.
+//                     strncpy((char*)g_param_descriptors[i].value, (char*)new_value, g_param_descriptors[i].size);
+//                     // Ensure null termination.
+//                     ((char*)g_param_descriptors[i].value)[g_param_descriptors[i].size - 1] = '\0';
+//                     break;
+//                 case PARAM_TYPE_INT_ARRAY:
+//                     memcpy(g_param_descriptors[i].value, new_value, sizeof(int) * g_param_descriptors[i].size);
+//                     break;
+//                 default:
+//                     return ESP_ERR_INVALID_ARG;
+//             }
+//             *(g_param_descriptors[i].dirty_flag) = true;
+//             return ESP_OK;
+//         }
+//     }
+//     return ESP_ERR_NOT_FOUND;
+// }
