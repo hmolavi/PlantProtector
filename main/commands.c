@@ -97,7 +97,7 @@ esp_err_t Cmd_Reboot(int argc, char **argv)
 
 esp_err_t Cmd_Connect(int argc, char **argv)
 {
-    WIFI_TryConnect();
+    Wifi_TryConnect();
     return ESP_OK;
 }
 

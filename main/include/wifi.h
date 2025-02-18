@@ -17,7 +17,7 @@
 void Wifi_InitSta();
 
 /// @brief Clears the failed attempts and retries to connect to wifi
-void WIFI_TryConnect();
+void Wifi_TryConnect();
 
 /// @brief Indicator of wifi connection, only set to true if internet ver
 bool wifiConnected;

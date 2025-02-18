@@ -50,6 +50,8 @@ void app_main(void)
 
     // Initialize NVS
     Param_ManagerInit();
+    // Init wifi
+    Wifi_InitSta();
 
     const char *ssid = Param_GetSsid(NULL);
     char *default_ssid = DEFAULT_SSID;
@@ -62,14 +64,13 @@ void app_main(void)
     const char *password = Param_GetPassword(NULL);
     char *default_password = DEFAULT_PASS;
     if (strcmp(password, default_password) != 0) {
-        printf("password: (%s) -> (%s): \n", password, default_password);
+        printf("password: (%s) -> (%s): ", password, default_password);
         esp_err_t err = Param_SetPassword(default_password, strlen(default_password));
         printf("%s\n", (err != ESP_OK) ? "Failed" : "Done");
     }
 
     /////////////////////////////////////////////////
 
-    // Read parameter with code completion
     printf("Brightness upon wake: %d\n", Param_GetBrightness());
 
     // Set parameter with type safety
@@ -122,7 +123,12 @@ void app_main(void)
 
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
 
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+    while (!ssid || !password || strlen(ssid) == 0) {
+        ESP_LOGI(TAG, "Waiting for valid SSID and password...");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ssid = Param_GetSsid(NULL);
+        password = Param_GetPassword(NULL);
+    }
 
-    Wifi_InitSta();
+    Wifi_TryConnect();
 }
