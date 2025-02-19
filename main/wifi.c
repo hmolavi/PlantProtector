@@ -200,22 +200,6 @@ void Wifi_TryConnect(void)
         return;
     }
 
-    printf("SSID: (%s)\n", ssid);
-    printf("PASS: (%s)\n", password);
-
-    // Print SSID and password including null-terminate characters
-    printf("SSID (with null terminator): ");
-    for (size_t i = 0; i < strlen(ssid) + 1; i++) {
-        printf("%c", ssid[i] ? ssid[i] : '\\0');
-    }
-    printf("\n");
-
-    printf("PASS (with null terminator): ");
-    for (size_t i = 0; i < strlen(password) + 1; i++) {
-        printf("%c", password[i] ? password[i] : '\\0');
-    }
-    printf("\n");
-
     if (g_wifi_connected) {
         ESP_LOGI(TAG, "Disconnecting from current AP");
         ESP_ERROR_CHECK(esp_wifi_disconnect());
@@ -252,16 +236,16 @@ void Wifi_TryConnect(void)
 
     if (bits & WIFI_CONNECTED_BIT) {
         g_wifi_connected = true;
-        ESP_LOGI(TAG, "Connected to AP: %s", ssid);
+        ESP_LOGI(TAG, "Connected to AP (%s)", ssid);
         if (check_internet_connection() == ESP_OK) {
             g_wifi_internet_connected = true;
         }
         else {
-            ESP_LOGW(TAG, "Connected to AP but no internet access");
+            ESP_LOGW(TAG, "Connected to AP (%s) but no internet access", ssid);
         }
     }
     else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGE(TAG, "Failed to connect to SSID: %s", ssid);
+        ESP_LOGE(TAG, "Failed to connect to SSID (%s) with password (%s)", ssid, password);
         g_wifi_connected = false;
     }
 }
