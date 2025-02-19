@@ -103,6 +103,7 @@ esp_err_t Cmd_Connect(int argc, char **argv)
 
 esp_err_t Cmd_Save(int argc, char **argv)
 {
+    printf("Saving dirty parameters\n");
     Param_SaveDirtyParameters();
     return ESP_OK;
 }
