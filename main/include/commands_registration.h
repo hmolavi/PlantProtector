@@ -40,4 +40,9 @@ int CMD_CommandsInit(void);
 #define CMD_IMPL(_1, _2, _3, NAME, ...) NAME
 #define CMD(...) CMD_IMPL(__VA_ARGS__, CMD_WITH_HINT, CMD_WITHOUT_HINT)(__VA_ARGS__)
 
+char helptxt_Cmd_Art[] = "print Plant Protector ascii art";
+char hinttxt_Cmd_Art[] = "";
+const esp_console_cmd_t console_cmd_Cmd_Art = {.command = "art", .help = helptxt_Cmd_Art, .hint = hinttxt_Cmd_Art, .func = &Cmd_Art};
+ESP_ERROR_CHECK(esp_console_cmd_register(&console_cmd_Cmd_Art));
+
 */

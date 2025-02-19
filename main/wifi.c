@@ -26,6 +26,9 @@
 
 #define MAX_RETRIES 2
 
+bool g_wifi_connected = false;
+bool g_wifi_internet_connected = false;
+
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -40,7 +43,7 @@ static const char *TAG = "wifi.c";
 
 static int s_retry_num = 0;
 
-static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
@@ -164,7 +167,8 @@ static int check_internet_connection()
 
 void Wifi_InitSta(void)
 {
-    wifiConnected = false;
+    g_wifi_connected = false;
+    g_wifi_internet_connected = false;
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -174,19 +178,10 @@ void Wifi_InitSta(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    // Register event handlers
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                                                        ESP_EVENT_ANY_ID,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-                                                        IP_EVENT_STA_GOT_IP,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_got_ip));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -205,9 +200,27 @@ void Wifi_TryConnect(void)
         return;
     }
 
-    if (wifiConnected) {
+    printf("SSID: (%s)\n", ssid);
+    printf("PASS: (%s)\n", password);
+
+    // Print SSID and password including null-terminate characters
+    printf("SSID (with null terminator): ");
+    for (size_t i = 0; i < strlen(ssid) + 1; i++) {
+        printf("%c", ssid[i] ? ssid[i] : '\\0');
+    }
+    printf("\n");
+
+    printf("PASS (with null terminator): ");
+    for (size_t i = 0; i < strlen(password) + 1; i++) {
+        printf("%c", password[i] ? password[i] : '\\0');
+    }
+    printf("\n");
+
+    if (g_wifi_connected) {
         ESP_LOGI(TAG, "Disconnecting from current AP");
         ESP_ERROR_CHECK(esp_wifi_disconnect());
+        g_wifi_connected = false;
+        g_wifi_internet_connected = false;
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 
@@ -238,17 +251,17 @@ void Wifi_TryConnect(void)
                                            portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
+        g_wifi_connected = true;
         ESP_LOGI(TAG, "Connected to AP: %s", ssid);
         if (check_internet_connection() == ESP_OK) {
-            wifiConnected = true;
+            g_wifi_internet_connected = true;
         }
         else {
             ESP_LOGW(TAG, "Connected to AP but no internet access");
-            wifiConnected = false;
         }
     }
     else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGE(TAG, "Failed to connect to SSID: %s", ssid);
-        wifiConnected = false;
+        g_wifi_connected = false;
     }
 }

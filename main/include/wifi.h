@@ -14,12 +14,15 @@
 #include <stddef.h>
 
 /// @brief Initialise the wifi settings and try to connect to wifi
-void Wifi_InitSta();
+void Wifi_InitSta(void);
 
 /// @brief Clears the failed attempts and retries to connect to wifi
-void Wifi_TryConnect();
+void Wifi_TryConnect(void);
 
-/// @brief Indicator of wifi connection, only set to true if internet ver
-bool wifiConnected;
+/// @brief Wifi connection flag
+extern bool g_wifi_connected;
+
+/// @brief Wifi internet connection flag
+extern bool g_wifi_internet_connected;
 
 #endif  // __WIFI_H__
