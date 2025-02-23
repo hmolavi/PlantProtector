@@ -31,3 +31,10 @@ int const *ptr; // ptr is a pointer to constant int
 const int *ptr // ptr is a pointer to constant int  
 
 int *const ptr; // ptr is a constant pointer to int  
+
+
+# To clone
+Because of the aws sdk import you must also update the submodules that comes with it, you can do it with:
+``` bash
+git submodule update --init --recursive
+```
