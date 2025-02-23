@@ -19,8 +19,11 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_timer.h"
 #include "esp_vfs_dev.h"
 #include "esp_vfs_fat.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/timers.h"
 #include "include/ascii_art.h"
 #include "include/commands_registration.h"
 #include "include/parameters.h"
@@ -31,16 +34,27 @@
 
 static const char *TAG = "app_main.c";
 
-// static void initialize_nvs(void)
-// {
-//     esp_err_t err = nvs_flash_init();
-//     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
-//         err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-//         ESP_ERROR_CHECK(nvs_flash_erase());
-//         err = nvs_flash_init();
-//     }
-//     ESP_ERROR_CHECK(err);
-// }
+void wifi_task(void *arg)
+{
+    // Initialize wifi
+    Wifi_InitSta();
+
+    const char *ssid = Param_GetSsid(NULL);
+    const char *password = Param_GetPassword(NULL);
+
+    while (!ssid || !password || strlen(ssid) == 0) {
+        ESP_LOGI(TAG, "Waiting for valid SSID and password...");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ssid = Param_GetSsid(NULL);
+        password = Param_GetPassword(NULL);
+    }
+
+    Wifi_TryConnect();
+
+    while (1) { /* Weeeeeee */
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
 
 void app_main(void)
 {
@@ -50,8 +64,6 @@ void app_main(void)
 
     // Initialize NVS
     Param_ManagerInit();
-    // Init wifi
-    Wifi_InitSta();
 
     const char *ssid = Param_GetSsid(NULL);
     char *default_ssid = DEFAULT_SSID;
@@ -123,12 +135,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
 
-    while (!ssid || !password || strlen(ssid) == 0) {
-        ESP_LOGI(TAG, "Waiting for valid SSID and password...");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        ssid = Param_GetSsid(NULL);
-        password = Param_GetPassword(NULL);
-    }
+    // Create WiFi Task (Core 0)
+    xTaskCreatePinnedToCore(&wifi_task, "wifi_task", 4096, NULL, 5, NULL, 0);
 
-    Wifi_TryConnect();
+    // Note: ESP32-S3 uses APP CPU (Core 0) and PRO CPU (Core 1)
+    // Adjust core affinity based on your specific requirements
 }
