@@ -1,8 +1,8 @@
 ///@file param_manager.h
 ///@author Hossein Molavi (hmolavi@uwaterloo.ca)
 ///
-///@version 1.0
-///@date 2025-02-16
+///@version 1.2
+///@date 2025-03-02
 ///
 ///@copyright Copyright (c) 2025
 ///
@@ -19,12 +19,46 @@
 ///       (type, variable name, default value, description,
 ///       PascalName). For arrays, you must set the max
 ///       length as well.
-#define PARAMETER_TABLE                                              \
-    PARAM(int32_t, brightness, 50, "brightness duh", Brightness)     \
-    PARAM(uint32_t, interval, 1000, "random interval", Internval)    \
-    ARRAY(char, 32, ssid, "fakessid", "WiFi ssid", Ssid)             \
-    ARRAY(char, 64, password, "fakepass", "WiFi password", Password) \
-    ARRAY(int, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray)
+///
+///       Available data types are:
+///       char, uint8_t, uint16_t, uint32_t, int32_t, float
+#define PARAMETER_TABLE                                                              \
+    PARAM(char, exampleChar, 'A', "example char", ExampleChar)                       \
+    PARAM(uint8_t, exampleUint8, 255, "example uint8_t", ExampleUint8)               \
+    PARAM(uint16_t, exampleUint16, 65535, "example uint16_t", ExampleUint16)         \
+    PARAM(uint32_t, exampleUint32, 4294967295, "example uint32_t", ExampleUint32)    \
+    PARAM(int32_t, exampleInt32, -2147483648, "example int32_t", ExampleInt32)       \
+    PARAM(float, exampleFloat, 3.14, "example float", ExampleFloat)                  \
+    PARAM(int32_t, brightness, 50, "brightness duh", Brightness)                     \
+    PARAM(uint32_t, interval, 1000, "random interval", Internval)                    \
+    ARRAY(char, 32, ssid, "fakessid", "WiFi ssid", Ssid)                             \
+    ARRAY(char, 64, password, "fakepass", "WiFi password", Password)                 \
+    ARRAY(int32_t, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray) \
+    PARAM(bool, seriousmode, false, "Determines AIs tone of voice", SeriousMode)
+
+/// @brief Param data types for all of PARAMs and ARRAYs
+///
+///        enum values are lowercase because they will be used
+///        directly from the PARAM and ARRAY macros
+enum EParamDataTypes {
+    type_bool,
+    type_char,
+    type_uint8_t,
+    type_uint16_t,
+    type_uint32_t,
+    type_int32_t,
+    type_float,
+
+    type_array_bool,
+    type_array_char,
+    type_array_uint8_t,
+    type_array_uint16_t,
+    type_array_uint32_t,
+    type_array_int32_t,
+    type_array_float,
+
+    type_undefined,
+};
 
 #define PARAM(type_, name_, default_value_, description_, pn) \
     struct {                                                  \
@@ -75,6 +109,9 @@ PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
 
+
+// TODO: Change the names of main functions to ParamManager_...
+
 /// @brief Attempts to pull g_params from nvs flash, if value failed or non-existant,
 ///        value will be set to default and dirty flag will be set to true. Also
 ///        creates periodic timer for nvs parameter saves; set to 30 seconds
@@ -82,3 +119,9 @@ void Param_ManagerInit(void);
 
 /// @brief Identifies parameters that have been modified (dirty) and saves them to nvs
 void Param_SaveDirtyParameters(void);
+
+///@brief Get the parameter data type
+///
+///@param name Name of the parameter
+///@return enum EParamDataTypes
+enum EParamDataTypes ParamManager_GetTypeByName(const char* name);

@@ -1,8 +1,8 @@
 ///@file param_manager.c
 ///@author Hossein Molavi (hmolavi@uwaterloo.ca)
 ///
-///@version 1.0
-///@date 2025-02-16
+///@version 1.2
+///@date 2025-03-02
 ///
 ///@copyright Copyright (c) 2025
 ///
@@ -203,4 +203,25 @@ void Param_ManagerInit(void)
     else {
         ESP_LOGE(TAG, "Failed to create periodic timer");
     }
+}
+
+enum EParamDataTypes ParamManager_GetTypeByName(const char* name)
+{
+    if (name == NULL) return type_undefined;
+
+#define PARAM(t, name_, default_value_, description_, pn) \
+    if (strncmp(#name_, name, strlen(#name_)) == 0) {     \
+        return type_##t;                                  \
+    }
+
+#define ARRAY(type_, size_, name_, default_value_, description_, pn) \
+    if (strncmp(#name_, name, strlen(#name_)) == 0) {                \
+        return type_array_##type_;                                   \
+    }
+    PARAMETER_TABLE
+#undef PARAM
+#undef ARRAY
+
+    /* The parameter does not exist */
+    return type_undefined;
 }
