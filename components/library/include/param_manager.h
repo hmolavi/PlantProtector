@@ -36,30 +36,6 @@
     ARRAY(int32_t, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray) \
     PARAM(bool, seriousmode, false, "Determines AIs tone of voice", SeriousMode)
 
-/// @brief Param data types for all of PARAMs and ARRAYs
-///
-///        enum values are lowercase because they will be used
-///        directly from the PARAM and ARRAY macros
-enum EParamDataTypes {
-    type_bool,
-    type_char,
-    type_uint8_t,
-    type_uint16_t,
-    type_uint32_t,
-    type_int32_t,
-    type_float,
-
-    type_array_bool,
-    type_array_char,
-    type_array_uint8_t,
-    type_array_uint16_t,
-    type_array_uint32_t,
-    type_array_int32_t,
-    type_array_float,
-
-    type_undefined,
-};
-
 #define PARAM(type_, name_, default_value_, description_, pn) \
     struct {                                                  \
         const char* name;                                     \
@@ -108,6 +84,44 @@ extern struct ParamMasterControl g_params;
 PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
+
+/// @brief Param data types for all of PARAMs and ARRAYs
+///
+///        enum values are lowercase because they will be used
+///        directly from the PARAM and ARRAY macros
+enum EParamDataTypes {
+    type_bool,
+    type_char,
+    type_uint8_t,
+    type_uint16_t,
+    type_uint32_t,
+    type_int32_t,
+    type_float,
+
+    type_array_bool,
+    type_array_char,
+    type_array_uint8_t,
+    type_array_uint16_t,
+    type_array_uint32_t,
+    type_array_int32_t,
+    type_array_float,
+
+    type_undefined,
+};
+
+typedef struct {
+    const char* name;
+    enum EParamDataTypes type;
+    void* value;       // pointer to the parameter value in g_params
+    size_t size;       // For arrays, size in elements; for strings, max length; for others, size of data type
+    bool* dirty_flag;  // pointer to the dirty flag
+} ParamDescriptor_t;
+
+
+
+esp_err_t Param_PrintScalar(const char* name, char* out_buffer);
+
+esp_err_t Param_PrintArray(const char* name, char** out_buffer, uint32_t* out_buffer_size);
 
 /// @brief Attempts to pull g_params from nvs flash, if value failed or non-existant,
 ///        value will be set to default and dirty flag will be set to true. Also

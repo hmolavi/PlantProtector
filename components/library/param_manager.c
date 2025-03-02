@@ -9,7 +9,9 @@
 
 #include "include/param_manager.h"
 
+#include <inttypes.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -107,6 +109,219 @@ struct ParamMasterControl g_params = {
 PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
+
+const ParamDescriptor_t ParamsDescriptor[] = {
+#define PARAM(type__, name_, default_value_, description_, pn) \
+    {                                                          \
+        .name = #name_,                                        \
+        .type = type_##type__,                                 \
+        .value = &g_params.name_.value,                        \
+        .size = sizeof(type__),                                \
+        .dirty_flag = &g_params.name_.dirty,                   \
+    },
+#define ARRAY(type__, size_, name_, default_value_, description_, pn) \
+    {                                                                 \
+        .name = #name_,                                               \
+        .type = type_##array_##type__,                                \
+        .value = g_params.name_.value,                                \
+        .size = size_,                                                \
+        .dirty_flag = &g_params.name_.dirty,                          \
+    },
+    PARAMETER_TABLE
+#undef PARAM
+#undef ARRAY
+};
+const uint32_t ParamsDescriptorSize = sizeof(ParamsDescriptor) / sizeof(ParamsDescriptor[0]);
+
+esp_err_t Param_PrintScalar(const char* name, char* out_buffer)
+{
+    const size_t BUFFER_SIZE = 128;
+    if (name == NULL || out_buffer == NULL) return ESP_ERR_INVALID_ARG;
+
+    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+        const ParamDescriptor_t* desc = &ParamsDescriptor[i];
+        if (strcmp(desc->name, name) != 0) continue;
+
+        // Reject array types
+        if (desc->type >= type_array_bool) {
+            return ESP_ERR_INVALID_ARG;
+        }
+
+        switch (desc->type) {
+            case type_bool: {
+                bool val = *(bool*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%s", val ? "true" : "false");
+                return ESP_OK;
+            }
+            case type_char: {
+                char c = *(char*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%c", c);
+                return ESP_OK;
+            }
+            case type_uint8_t: {
+                uint8_t val = *(uint8_t*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%" PRIu8, val);
+                return ESP_OK;
+            }
+            case type_uint16_t: {
+                uint16_t val = *(uint16_t*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%" PRIu16, val);
+                return ESP_OK;
+            }
+            case type_uint32_t: {
+                uint32_t val = *(uint32_t*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%" PRIu32, val);
+                return ESP_OK;
+            }
+            case type_int32_t: {
+                int32_t val = *(int32_t*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%" PRId32, val);
+                return ESP_OK;
+            }
+            case type_float: {
+                float val = *(float*)desc->value;
+                snprintf(out_buffer, BUFFER_SIZE, "%.6g", val);
+                return ESP_OK;
+            }
+            default:
+                return ESP_ERR_NOT_SUPPORTED;
+        }
+    }
+    return ESP_ERR_NOT_FOUND;
+}
+
+// Helper function to calculate array buffer size
+static size_t calculate_array_buffer_size(const ParamDescriptor_t* desc)
+{
+    size_t max_element_size = 0;
+    size_t num_elements = desc->size;
+
+    switch (desc->type) {
+        case type_array_bool:
+            max_element_size = 5;  // "true" or "false"
+            break;
+        case type_array_char:
+            return num_elements + 1;  // Simple string copy
+        case type_array_uint8_t:
+            max_element_size = 3;  // 0-255
+            break;
+        case type_array_uint16_t:
+            max_element_size = 5;  // 0-65535
+            break;
+        case type_array_uint32_t:
+            max_element_size = 10;  // 0-4294967295
+            break;
+        case type_array_int32_t:
+            max_element_size = 11;  // -2147483648
+            break;
+        case type_array_float:
+            max_element_size = 32;  // For scientific notation
+            break;
+        default:
+            return 0;
+    }
+
+    // Calculate total size: (elements * (max_element_size + comma)) + null terminator
+    return (num_elements * (max_element_size + 1)) + 1;
+}
+
+esp_err_t Param_PrintArray(const char* name, char** out_buffer, uint32_t* out_buffer_size)
+{
+    if (name == NULL || out_buffer == NULL) return ESP_ERR_INVALID_ARG;
+
+    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+        const ParamDescriptor_t* desc = &ParamsDescriptor[i];
+        if (strcmp(desc->name, name) != 0) continue;
+
+        if (desc->type < type_array_bool) {
+            return ESP_ERR_INVALID_ARG;
+        }
+
+        // Calculate required buffer size
+        size_t needed_size = calculate_array_buffer_size(desc);
+        if (needed_size == 0) return ESP_ERR_NOT_SUPPORTED;
+
+        // Allocate buffer
+        *out_buffer = malloc(needed_size);
+        if (*out_buffer == NULL) return ESP_ERR_NO_MEM;
+
+        *out_buffer_size = needed_size;
+        char* ptr = *out_buffer;
+        *ptr = '\0';  // Initialize empty string
+
+        switch (desc->type) {
+            case type_array_char: {
+                strncpy(ptr, (char*)desc->value, desc->size);
+                ptr[desc->size] = '\0';
+                return ESP_OK;
+            }
+            case type_array_bool: {
+                bool* arr = (bool*)desc->value;
+                for (size_t j = 0; j < desc->size; j++) {
+                    const char* val_str = arr[j] ? "true" : "false";
+                    if (j > 0) strcat(ptr, ",");
+                    strcat(ptr, val_str);
+                }
+                return ESP_OK;
+            }
+            case type_array_uint8_t: {
+                uint8_t* arr = (uint8_t*)desc->value;
+                for (size_t j = 0; j < desc->size; j++) {
+                    char num[4];
+                    snprintf(num, sizeof(num), "%" PRIu8, arr[j]);
+                    if (j > 0) strcat(ptr, ",");
+                    strcat(ptr, num);
+                }
+                return ESP_OK;
+            }
+            case type_array_uint16_t: {
+                uint16_t* arr = (uint16_t*)desc->value;
+                for (size_t j = 0; j < desc->size; j++) {
+                    char num[6];
+                    snprintf(num, sizeof(num), "%" PRIu16, arr[j]);
+                    if (j > 0) strcat(ptr, ",");
+                    strcat(ptr, num);
+                }
+                return ESP_OK;
+            }
+            case type_array_uint32_t: {
+                uint32_t* arr = (uint32_t*)desc->value;
+                for (size_t j = 0; j < desc->size; j++) {
+                    char num[11];
+                    snprintf(num, sizeof(num), "%" PRIu32, arr[j]);
+                    if (j > 0) strcat(ptr, ",");
+                    strcat(ptr, num);
+                }
+                return ESP_OK;
+            }
+            case type_array_int32_t: {
+                int32_t* arr = (int32_t*)desc->value;
+                for (size_t j = 0; j < desc->size; j++) {
+                    char num[12];
+                    snprintf(num, sizeof(num), "%" PRId32, arr[j]);
+                    if (j > 0) strcat(ptr, ",");
+                    strcat(ptr, num);
+                }
+                return ESP_OK;
+            }
+            case type_array_float: {
+                float* arr = (float*)desc->value;
+                for (size_t j = 0; j < desc->size; j++) {
+                    char num[32];
+                    snprintf(num, sizeof(num), "%.6g", arr[j]);
+                    if (j > 0) strcat(ptr, ",");
+                    strcat(ptr, num);
+                }
+                return ESP_OK;
+            }
+            default:
+                free(*out_buffer);
+                *out_buffer = NULL;
+                return ESP_ERR_NOT_SUPPORTED;
+        }
+    }
+    return ESP_ERR_NOT_FOUND;
+}
 
 /// @brief Identifies parameters that have been modified (dirty) and saves them to nvs
 void ParamManager_SaveDirtyParameters(void)
@@ -207,21 +422,10 @@ void ParamManager_Init(void)
 
 enum EParamDataTypes ParamManager_GetTypeByName(const char* name)
 {
-    if (name == NULL) return type_undefined;
-
-#define PARAM(t, name_, default_value_, description_, pn) \
-    if (strncmp(#name_, name, strlen(#name_)) == 0) {     \
-        return type_##t;                                  \
+    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+        if (strcmp(ParamsDescriptor[i].name, name) == 0) {
+            return ParamsDescriptor[i].type;
+        }
     }
-
-#define ARRAY(type_, size_, name_, default_value_, description_, pn) \
-    if (strncmp(#name_, name, strlen(#name_)) == 0) {                \
-        return type_array_##type_;                                   \
-    }
-    PARAMETER_TABLE
-#undef PARAM
-#undef ARRAY
-
-    /* The parameter does not exist */
     return type_undefined;
 }
