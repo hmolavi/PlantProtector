@@ -28,5 +28,5 @@
 int CMD_CommandsInit(void)
 {
     COMMANDS_LIST
-    return EXIT_SUCCESS;
+    return ESP_OK;
 }
