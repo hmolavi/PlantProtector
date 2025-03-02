@@ -19,7 +19,7 @@
 
 #include "esp_err.h"
 
-static uint8_t CurrentSecureLevel;
+static uint8_t CurrentSecureLevel = 2;
 
 uint8_t SecureLevel(void) { return CurrentSecureLevel; }
 
