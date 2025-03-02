@@ -95,16 +95,16 @@ PARAMETER_TABLE
 ///        enum values are lowercase because they will be used
 ///        directly from the PARAM and ARRAY macros
 enum EParamDataTypes {
-    type_bool,
     type_char,
+    type_bool,
     type_uint8_t,
     type_uint16_t,
     type_uint32_t,
     type_int32_t,
     type_float,
 
-    type_array_bool,
     type_array_char,
+    type_array_bool,
     type_array_uint8_t,
     type_array_uint16_t,
     type_array_uint32_t,
@@ -124,6 +124,9 @@ typedef struct {
     bool* is_dirty;    // pointer to the dirty flag
     bool* is_default;  // pointer to the is_default flag
 } ParamDescriptor_t;
+
+extern const ParamDescriptor_t g_params_descriptor[];
+const uint32_t g_params_descriptor_size;
 
 esp_err_t Param_Print(const char* name, char* out_buffer);
 esp_err_t Param_PrintWithBufferSize(const char* name, char* out_buffer, const size_t buffer_size);

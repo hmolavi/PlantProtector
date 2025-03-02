@@ -125,7 +125,7 @@ PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
 
-const ParamDescriptor_t ParamsDescriptor[] = {
+const ParamDescriptor_t g_params_descriptor[] = {
 #define PARAM(secure_lvl_, type__, name_, default_value_, description_, pn) \
     {                                                                       \
         .secure_level = secure_lvl_,                                        \
@@ -150,17 +150,17 @@ const ParamDescriptor_t ParamsDescriptor[] = {
 #undef PARAM
 #undef ARRAY
 };
-const uint32_t ParamsDescriptorSize = sizeof(ParamsDescriptor) / sizeof(ParamsDescriptor[0]);
+const uint32_t g_params_descriptor_size = sizeof(g_params_descriptor) / sizeof(g_params_descriptor[0]);
 
 esp_err_t Param_PrintWithBufferSize(const char* name, char* out_buffer, const size_t buffer_size)
 {
     if (name == NULL || out_buffer == NULL) return ESP_ERR_INVALID_ARG;
 
-    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
-        const ParamDescriptor_t* desc = &ParamsDescriptor[i];
+    for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
+        const ParamDescriptor_t* desc = &g_params_descriptor[i];
         if (strcmp(desc->name, name) != 0) continue;
 
-        // Reject array types
+        // Reject array types with the exception of type_array_char
         if (desc->type >= type_array_bool) {
             return ESP_ERR_INVALID_ARG;
         }
@@ -257,8 +257,8 @@ esp_err_t Param_PrintArray(const char* name, char** out_buffer, uint32_t* out_bu
 {
     if (name == NULL || out_buffer == NULL) return ESP_ERR_INVALID_ARG;
 
-    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
-        const ParamDescriptor_t* desc = &ParamsDescriptor[i];
+    for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
+        const ParamDescriptor_t* desc = &g_params_descriptor[i];
         if (strcmp(desc->name, name) != 0) continue;
 
         if (desc->type < type_array_bool) {
@@ -448,9 +448,9 @@ void ParamManager_Init(void)
 
 #ifdef DEBUG_INIT
     const ParamDescriptor_t* p;
-    p = ParamsDescriptor;
+    p = g_params_descriptor;
     printf("\nParameters pulled from nvs:\n");
-    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+    for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
         printf("%24s %s%s\n", p->name, *(p->is_default) ? "Factory" : "NOT Factory", *(p->is_dirty) ? " | dirty" : " ");
         p++;
     }
@@ -475,9 +475,9 @@ void ParamManager_Init(void)
 
 enum EParamDataTypes ParamManager_GetTypeByName(const char* name)
 {
-    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
-        if (strcmp(ParamsDescriptor[i].name, name) == 0) {
-            return ParamsDescriptor[i].type;
+    for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
+        if (strcmp(g_params_descriptor[i].name, name) == 0) {
+            return g_params_descriptor[i].type;
         }
     }
     return type_undefined;
@@ -487,9 +487,9 @@ void ParamManager_PrintEditableParams(void)
 {
     const ParamDescriptor_t* p;
     char buf[DEFAULT_BUFFER_SIZE];
-    p = ParamsDescriptor;
+    p = g_params_descriptor;
 
-    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+    for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
         if (p->secure_level >= SecureLevel()) {
             /* Make sure to dereference the is_dirty and is_default pointers */
             printf("%24s (%c%c)", p->name, *(p->is_dirty) ? '*' : ' ', *(p->is_default) ? 'F' : ' ');
