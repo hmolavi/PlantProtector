@@ -20,6 +20,7 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
+#include "include/secure_level.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
@@ -31,13 +32,14 @@ static const char* TAG = "param_manager.c";
 ///       here because arrays need to be strncpy. Will be done in
 ///       ParamManager_Init()
 ///       Stringify the name for the key with #name_
-#define PARAM(type_, name_, default_value_, description_, pn) \
-    .name_ = {                                                \
-        .name = #name_,                                       \
-        .dirty = false,                                       \
-        .default_value = default_value_,                      \
-        .description = description_,                          \
-        .key = #name_,                                        \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
+    .name_ = {                                                             \
+        .secure_level = secure_lvl_,                                       \
+        .name = #name_,                                                    \
+        .dirty = false,                                                    \
+        .default_value = default_value_,                                   \
+        .description = description_,                                       \
+        .key = #name_,                                                     \
     },
 #define ARRAY(type_, size_, name_, default_value_, description_, pn) \
     .name_ = {                                                       \
@@ -55,24 +57,27 @@ struct ParamMasterControl g_params = {
 
 ///@brief Getters and Setters
 ///
-#define PARAM(type_, name_, default_value_, description_, pn) \
-    esp_err_t Param_Set##pn(const type_ value)                \
-    {                                                         \
-        if (g_params.name_.value != value) {                  \
-            g_params.name_.value = value;                     \
-            g_params.name_.dirty = true;                      \
-            return ESP_OK;                                    \
-        }                                                     \
-        return ESP_FAIL;                                      \
-    }                                                         \
-    type_ Param_Get##pn(void)                                 \
-    {                                                         \
-        return g_params.name_.value;                          \
-    }                                                         \
-    esp_err_t Param_Reset##pn(void)                           \
-    {                                                         \
-        g_params.name_.value = default_value_;                \
-        return ESP_OK;                                        \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
+    esp_err_t Param_Set##pn(const type_ value)                             \
+    {                                                                      \
+        if (SecureLevel() > secure_lvl_) {                                 \
+            return ESP_FAIL;                                               \
+        }                                                                  \
+        if (g_params.name_.value != value) {                               \
+            g_params.name_.value = value;                                  \
+            g_params.name_.dirty = true;                                   \
+            return ESP_OK;                                                 \
+        }                                                                  \
+        return ESP_FAIL;                                                   \
+    }                                                                      \
+    type_ Param_Get##pn(void)                                              \
+    {                                                                      \
+        return g_params.name_.value;                                       \
+    }                                                                      \
+    esp_err_t Param_Reset##pn(void)                                        \
+    {                                                                      \
+        g_params.name_.value = default_value_;                             \
+        return ESP_OK;                                                     \
     }
 #define ARRAY(type_, size_, name_, default_value_, description_, pn)                         \
     esp_err_t Param_Set##pn(const type_* value, size_t length)                               \
@@ -111,13 +116,14 @@ PARAMETER_TABLE
 #undef ARRAY
 
 const ParamDescriptor_t ParamsDescriptor[] = {
-#define PARAM(type__, name_, default_value_, description_, pn) \
-    {                                                          \
-        .name = #name_,                                        \
-        .type = type_##type__,                                 \
-        .value = &g_params.name_.value,                        \
-        .size = sizeof(type__),                                \
-        .dirty_flag = &g_params.name_.dirty,                   \
+#define PARAM(secure_lvl_, type__, name_, default_value_, description_, pn) \
+    {                                                                       \
+        .secure_level = secure_lvl_,                                        \
+        .name = #name_,                                                     \
+        .type = type_##type__,                                              \
+        .value = &g_params.name_.value,                                     \
+        .size = sizeof(type__),                                             \
+        .dirty_flag = &g_params.name_.dirty,                                \
     },
 #define ARRAY(type__, size_, name_, default_value_, description_, pn) \
     {                                                                 \
@@ -332,7 +338,7 @@ void ParamManager_SaveDirtyParameters(void)
     int parametersChanged;
     parametersChanged = 0;
 
-#define PARAM(type_, name_, default_value_, description_, pn)                                        \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn)                           \
     if (g_params.name_.dirty) {                                                                      \
         size_t name_##required_size = sizeof(type_);                                                 \
         err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
@@ -378,7 +384,7 @@ void ParamManager_Init(void)
 
     nvs_handle_t handle;
     if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &handle) == ESP_OK) {
-#define PARAM(type_, name_, default_value_, description_, pn)                                                \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn)                                   \
     size_t name_##_required_size = sizeof(g_params.name_.value);                                             \
     if (nvs_get_blob(handle, g_params.name_.key, &g_params.name_.value, &name_##_required_size) != ESP_OK) { \
         g_params.name_.value = g_params.name_.default_value;                                                 \

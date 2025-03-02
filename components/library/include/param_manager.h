@@ -16,34 +16,35 @@
 #define ARRAY_INIT(...) {__VA_ARGS__}
 
 ///@brief Program variable parameters. Format is
-///       (type, variable name, default value, description,
+///       (securelevel, type, variable name, default value, description,
 ///       PascalName). For arrays, you must set the max
 ///       length as well.
 ///
 ///       Available data types are:
 ///       char, uint8_t, uint16_t, uint32_t, int32_t, float
 #define PARAMETER_TABLE                                                              \
-    PARAM(char, exampleChar, 'A', "example char", ExampleChar)                       \
-    PARAM(uint8_t, exampleUint8, 255, "example uint8_t", ExampleUint8)               \
-    PARAM(uint16_t, exampleUint16, 65535, "example uint16_t", ExampleUint16)         \
-    PARAM(uint32_t, exampleUint32, 4294967295, "example uint32_t", ExampleUint32)    \
-    PARAM(int32_t, exampleInt32, -2147483648, "example int32_t", ExampleInt32)       \
-    PARAM(float, exampleFloat, 3.14, "example float", ExampleFloat)                  \
-    PARAM(int32_t, brightness, 50, "brightness duh", Brightness)                     \
-    PARAM(uint32_t, interval, 1000, "random interval", Internval)                    \
+    PARAM(0, char, exampleChar, 'A', "example char", ExampleChar)                       \
+    PARAM(0, uint8_t, exampleUint8, 255, "example uint8_t", ExampleUint8)               \
+    PARAM(0, uint16_t, exampleUint16, 65535, "example uint16_t", ExampleUint16)         \
+    PARAM(0, uint32_t, exampleUint32, 4294967295, "example uint32_t", ExampleUint32)    \
+    PARAM(0, int32_t, exampleInt32, -2147483648, "example int32_t", ExampleInt32)       \
+    PARAM(0, float, exampleFloat, 3.14, "example float", ExampleFloat)                  \
+    PARAM(0, int32_t, brightness, 50, "brightness duh", Brightness)                     \
+    PARAM(0, uint32_t, interval, 1000, "random interval", Internval)                    \
+    PARAM(0, bool, seriousmode, false, "Determines AIs tone of voice", SeriousMode) \
     ARRAY(char, 32, ssid, "fakessid", "WiFi ssid", Ssid)                             \
     ARRAY(char, 64, password, "fakepass", "WiFi password", Password)                 \
-    ARRAY(int32_t, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray) \
-    PARAM(bool, seriousmode, false, "Determines AIs tone of voice", SeriousMode)
+    ARRAY(int32_t, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray) 
 
-#define PARAM(type_, name_, default_value_, description_, pn) \
-    struct {                                                  \
-        const char* name;                                     \
-        type_ value;                                          \
-        bool dirty;                                           \
-        const type_ default_value;                            \
-        const char* description;                              \
-        const char* const key;                                \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
+    struct {                                                               \
+        const uint8_t secure_level;                                        \
+        const char* name;                                                  \
+        type_ value;                                                       \
+        bool dirty;                                                        \
+        const type_ default_value;                                         \
+        const char* description;                                           \
+        const char* const key;                                             \
     } name_;
 #define ARRAY(type_, size_, name_, default_value_, description_, pn) \
     struct {                                                         \
@@ -72,7 +73,7 @@ extern struct ParamMasterControl g_params;
 ///       ARRAY Setters perform bound checks before setting the value.
 ///       ARRAY Resetters work as expected.
 ///       ARRAY Copy allows copying the array to a provided buffer.
-#define PARAM(type_, name_, default_value_, description_, pn) \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
     esp_err_t Param_Set##pn(const type_ value);               \
     type_ Param_Get##pn(void);                                \
     esp_err_t Param_Reset##pn(void);
@@ -110,14 +111,13 @@ enum EParamDataTypes {
 };
 
 typedef struct {
+    const uint8_t secure_level;
     const char* name;
     enum EParamDataTypes type;
     void* value;       // pointer to the parameter value in g_params
     size_t size;       // For arrays, size in elements; for strings, max length; for others, size of data type
     bool* dirty_flag;  // pointer to the dirty flag
 } ParamDescriptor_t;
-
-
 
 esp_err_t Param_PrintScalar(const char* name, char* out_buffer);
 

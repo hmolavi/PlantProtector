@@ -1,6 +1,7 @@
 idf_component_register(
                     SRCS 
                         param_manager.c
+                        secure_level.c
                     INCLUDE_DIRS 
                         .
                         ../../main
