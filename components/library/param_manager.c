@@ -41,14 +41,15 @@ static const char* TAG = "param_manager.c";
         .description = description_,                                       \
         .key = #name_,                                                     \
     },
-#define ARRAY(type_, size_, name_, default_value_, description_, pn) \
-    .name_ = {                                                       \
-        .name = #name_,                                              \
-        .size = size_,                                               \
-        .dirty = false,                                              \
-        .default_value = default_value_,                             \
-        .description = description_,                                 \
-        .key = #name_,                                               \
+#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn) \
+    .name_ = {                                                                    \
+        .secure_level = secure_lvl_,                                              \
+        .name = #name_,                                                           \
+        .size = size_,                                                            \
+        .dirty = false,                                                           \
+        .default_value = default_value_,                                          \
+        .description = description_,                                              \
+        .key = #name_,                                                            \
     },
 struct ParamMasterControl g_params = {
     PARAMETER_TABLE};
@@ -79,9 +80,12 @@ struct ParamMasterControl g_params = {
         g_params.name_.value = default_value_;                             \
         return ESP_OK;                                                     \
     }
-#define ARRAY(type_, size_, name_, default_value_, description_, pn)                         \
+#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn)            \
     esp_err_t Param_Set##pn(const type_* value, size_t length)                               \
     {                                                                                        \
+        if (SecureLevel() > secure_lvl_) {                                                   \
+            return ESP_FAIL;                                                                 \
+        }                                                                                    \
         if (length > size_) {                                                                \
             return ESP_ERR_INVALID_SIZE;                                                     \
         }                                                                                    \
@@ -125,13 +129,14 @@ const ParamDescriptor_t ParamsDescriptor[] = {
         .size = sizeof(type__),                                             \
         .dirty_flag = &g_params.name_.dirty,                                \
     },
-#define ARRAY(type__, size_, name_, default_value_, description_, pn) \
-    {                                                                 \
-        .name = #name_,                                               \
-        .type = type_##array_##type__,                                \
-        .value = g_params.name_.value,                                \
-        .size = size_,                                                \
-        .dirty_flag = &g_params.name_.dirty,                          \
+#define ARRAY(secure_lvl_, type__, size_, name_, default_value_, description_, pn) \
+    {                                                                              \
+        .secure_level = secure_lvl_,                                               \
+        .name = #name_,                                                            \
+        .type = type_##array_##type__,                                             \
+        .value = g_params.name_.value,                                             \
+        .size = size_,                                                             \
+        .dirty_flag = &g_params.name_.dirty,                                       \
     },
     PARAMETER_TABLE
 #undef PARAM
@@ -346,7 +351,7 @@ void ParamManager_SaveDirtyParameters(void)
         g_params.name_.dirty = false;                                                                \
         parametersChanged++;                                                                         \
     }
-#define ARRAY(type_, size_, name_, default_value_, description_, pn)                                 \
+#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn)                    \
     if (g_params.name_.dirty) {                                                                      \
         size_t name_##required_size = size_ * sizeof(type_);                                         \
         err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
@@ -393,7 +398,7 @@ void ParamManager_Init(void)
     else {                                                                                                   \
         g_params.name_.dirty = false;                                                                        \
     }
-#define ARRAY(type_, size_, name_, default_value_, description_, pn)                                         \
+#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn)                            \
     size_t name_##_required_size = sizeof(g_params.name_.value);                                             \
     if (nvs_get_blob(handle, g_params.name_.key, &g_params.name_.value, &name_##_required_size) != ESP_OK) { \
         memcpy(&g_params.name_.value, &g_params.name_.default_value, sizeof(g_params.name_.value));          \
