@@ -27,7 +27,7 @@ static const char* TAG = "param_manager.c";
 
 ///@brief Parameter storage initialization. Cant set the default
 ///       here because arrays need to be strncpy. Will be done in
-///       Param_ManagerInit()
+///       ParamManager_Init()
 ///       Stringify the name for the key with #name_
 #define PARAM(type_, name_, default_value_, description_, pn) \
     .name_ = {                                                \
@@ -109,7 +109,7 @@ PARAMETER_TABLE
 #undef ARRAY
 
 /// @brief Identifies parameters that have been modified (dirty) and saves them to nvs
-void Param_SaveDirtyParameters(void)
+void ParamManager_SaveDirtyParameters(void)
 {
     nvs_handle_t handle;
     esp_err_t err;
@@ -146,13 +146,13 @@ void Param_SaveDirtyParameters(void)
 
 static void save_dirty_parameters_callback(TimerHandle_t xTimer)
 {
-    Param_SaveDirtyParameters();
+    ParamManager_SaveDirtyParameters();
 }
 
 /// @brief Attempt to pull g_params from nvs flash, if value failed or non-existant,
 ///        value will be set to default and dirty flag will be set to true. Also
 ///        creates periodic timer for nvs parameter saves; set to 30 seconds
-void Param_ManagerInit(void)
+void ParamManager_Init(void)
 {
     // NVS initialization
     esp_err_t ret = nvs_flash_init();

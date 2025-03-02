@@ -109,16 +109,13 @@ PARAMETER_TABLE
 #undef PARAM
 #undef ARRAY
 
-
-// TODO: Change the names of main functions to ParamManager_...
-
 /// @brief Attempts to pull g_params from nvs flash, if value failed or non-existant,
 ///        value will be set to default and dirty flag will be set to true. Also
 ///        creates periodic timer for nvs parameter saves; set to 30 seconds
-void Param_ManagerInit(void);
+void ParamManager_Init(void);
 
 /// @brief Identifies parameters that have been modified (dirty) and saves them to nvs
-void Param_SaveDirtyParameters(void);
+void ParamManager_SaveDirtyParameters(void);
 
 ///@brief Get the parameter data type
 ///
