@@ -7,20 +7,21 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#ifndef __SECURELEVEL_H__
-#define __SECURELEVEL_H__
+#ifndef __SECURE_LEVEL_H__
+#define __SECURE_LEVEL_H__
 
 #include <stdint.h>
+
 #include "esp_err.h"
 
 ///@brief Return the current secure level
 ///
-///@return uint8_t 
+///@return uint8_t
 uint8_t SecureLevel(void);
 
 /// @brief Modify the secure level
-/// @param new_secure_level 
+/// @param new_secure_level
 /// @return esp_err_t
 esp_err_t SecureLevel_Change(uint8_t new_secure_level);
 
-#endif
+#endif  // __SECURE_LEVEL_H__

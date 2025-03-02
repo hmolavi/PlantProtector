@@ -7,6 +7,9 @@
 ///@copyright Copyright (c) 2025
 ///
 
+#ifndef __PARAM_MANAGER_H__
+#define __PARAM_MANAGER_H__
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -137,3 +140,5 @@ void ParamManager_SaveDirtyParameters(void);
 ///@param name Name of the parameter
 ///@return enum EParamDataTypes
 enum EParamDataTypes ParamManager_GetTypeByName(const char* name);
+
+#endif  // __PARAM_MANAGER_H__
