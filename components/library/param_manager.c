@@ -28,6 +28,10 @@ static const char* TAG = "param_manager.c";
 
 #define NVS_NAMESPACE "param_storage"
 
+// #define DEBUG_INIT 1
+
+#define DEFAULT_BUFFER_SIZE 128
+
 ///@brief Parameter storage initialization. Cant set the default
 ///       here because arrays need to be strncpy. Will be done in
 ///       ParamManager_Init()
@@ -36,9 +40,9 @@ static const char* TAG = "param_manager.c";
     .name_ = {                                                             \
         .secure_level = secure_lvl_,                                       \
         .name = #name_,                                                    \
-        .dirty = false,                                                    \
+        .is_dirty = false,                                                 \
+        .is_default = true,                                                \
         .default_value = default_value_,                                   \
-        .description = description_,                                       \
         .key = #name_,                                                     \
     },
 #define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn) \
@@ -46,9 +50,9 @@ static const char* TAG = "param_manager.c";
         .secure_level = secure_lvl_,                                              \
         .name = #name_,                                                           \
         .size = size_,                                                            \
-        .dirty = false,                                                           \
+        .is_dirty = false,                                                        \
+        .is_default = true,                                                       \
         .default_value = default_value_,                                          \
-        .description = description_,                                              \
         .key = #name_,                                                            \
     },
 struct ParamMasterControl g_params = {
@@ -66,7 +70,8 @@ struct ParamMasterControl g_params = {
         }                                                                  \
         if (g_params.name_.value != value) {                               \
             g_params.name_.value = value;                                  \
-            g_params.name_.dirty = true;                                   \
+            g_params.name_.is_default = false;                             \
+            g_params.name_.is_dirty = true;                                \
             return ESP_OK;                                                 \
         }                                                                  \
         return ESP_FAIL;                                                   \
@@ -91,7 +96,8 @@ struct ParamMasterControl g_params = {
         }                                                                                    \
         if (memcmp(&g_params.name_.value, value, size_ * sizeof(type_)) != 0) {              \
             memcpy(&g_params.name_.value, value, size_ * sizeof(type_));                     \
-            g_params.name_.dirty = true;                                                     \
+            g_params.name_.is_default = false;                                               \
+            g_params.name_.is_dirty = true;                                                  \
             return ESP_OK;                                                                   \
         }                                                                                    \
         return ESP_ERR_INVALID_ARG;                                                          \
@@ -127,7 +133,8 @@ const ParamDescriptor_t ParamsDescriptor[] = {
         .type = type_##type__,                                              \
         .value = &g_params.name_.value,                                     \
         .size = sizeof(type__),                                             \
-        .dirty_flag = &g_params.name_.dirty,                                \
+        .is_dirty = &g_params.name_.is_dirty,                               \
+        .is_default = &g_params.name_.is_default,                           \
     },
 #define ARRAY(secure_lvl_, type__, size_, name_, default_value_, description_, pn) \
     {                                                                              \
@@ -136,7 +143,8 @@ const ParamDescriptor_t ParamsDescriptor[] = {
         .type = type_##array_##type__,                                             \
         .value = g_params.name_.value,                                             \
         .size = size_,                                                             \
-        .dirty_flag = &g_params.name_.dirty,                                       \
+        .is_dirty = &g_params.name_.is_dirty,                                      \
+        .is_default = &g_params.name_.is_default,                                  \
     },
     PARAMETER_TABLE
 #undef PARAM
@@ -144,9 +152,8 @@ const ParamDescriptor_t ParamsDescriptor[] = {
 };
 const uint32_t ParamsDescriptorSize = sizeof(ParamsDescriptor) / sizeof(ParamsDescriptor[0]);
 
-esp_err_t Param_PrintScalar(const char* name, char* out_buffer)
+esp_err_t Param_PrintWithBufferSize(const char* name, char* out_buffer, const size_t buffer_size)
 {
-    const size_t BUFFER_SIZE = 128;
     if (name == NULL || out_buffer == NULL) return ESP_ERR_INVALID_ARG;
 
     for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
@@ -161,37 +168,42 @@ esp_err_t Param_PrintScalar(const char* name, char* out_buffer)
         switch (desc->type) {
             case type_bool: {
                 bool val = *(bool*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%s", val ? "true" : "false");
+                snprintf(out_buffer, buffer_size, "%s", val ? "true" : "false");
                 return ESP_OK;
             }
             case type_char: {
                 char c = *(char*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%c", c);
+                snprintf(out_buffer, buffer_size, "%c", c);
                 return ESP_OK;
             }
             case type_uint8_t: {
                 uint8_t val = *(uint8_t*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%" PRIu8, val);
+                snprintf(out_buffer, buffer_size, "%" PRIu8, val);
                 return ESP_OK;
             }
             case type_uint16_t: {
                 uint16_t val = *(uint16_t*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%" PRIu16, val);
+                snprintf(out_buffer, buffer_size, "%" PRIu16, val);
                 return ESP_OK;
             }
             case type_uint32_t: {
                 uint32_t val = *(uint32_t*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%" PRIu32, val);
+                snprintf(out_buffer, buffer_size, "%" PRIu32, val);
                 return ESP_OK;
             }
             case type_int32_t: {
                 int32_t val = *(int32_t*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%" PRId32, val);
+                snprintf(out_buffer, buffer_size, "%" PRId32, val);
                 return ESP_OK;
             }
             case type_float: {
                 float val = *(float*)desc->value;
-                snprintf(out_buffer, BUFFER_SIZE, "%.6g", val);
+                snprintf(out_buffer, buffer_size, "%.6g", val);
+                return ESP_OK;
+            }
+            case type_array_char: {
+                char* str = (char*)desc->value;
+                snprintf(out_buffer, buffer_size, "%s", str);
                 return ESP_OK;
             }
             default:
@@ -199,6 +211,11 @@ esp_err_t Param_PrintScalar(const char* name, char* out_buffer)
         }
     }
     return ESP_ERR_NOT_FOUND;
+}
+
+esp_err_t Param_Print(const char* name, char* out_buffer)
+{
+    return Param_PrintWithBufferSize(name, out_buffer, DEFAULT_BUFFER_SIZE);
 }
 
 // Helper function to calculate array buffer size
@@ -344,19 +361,19 @@ void ParamManager_SaveDirtyParameters(void)
     parametersChanged = 0;
 
 #define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn)                           \
-    if (g_params.name_.dirty) {                                                                      \
+    if (g_params.name_.is_dirty) {                                                                   \
         size_t name_##required_size = sizeof(type_);                                                 \
         err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
         if (err != ESP_OK) ESP_LOGE(TAG, "Failed to set blob for: %s\n", g_params.name_.name);       \
-        g_params.name_.dirty = false;                                                                \
+        g_params.name_.is_dirty = false;                                                             \
         parametersChanged++;                                                                         \
     }
 #define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn)                    \
-    if (g_params.name_.dirty) {                                                                      \
+    if (g_params.name_.is_dirty) {                                                                   \
         size_t name_##required_size = size_ * sizeof(type_);                                         \
         err = nvs_set_blob(handle, g_params.name_.key, &g_params.name_.value, name_##required_size); \
         if (err != ESP_OK) ESP_LOGE(TAG, "Failed to set blob for: %s\n", g_params.name_.name);       \
-        g_params.name_.dirty = false;                                                                \
+        g_params.name_.is_dirty = false;                                                             \
         parametersChanged++;                                                                         \
     }
     PARAMETER_TABLE
@@ -393,19 +410,33 @@ void ParamManager_Init(void)
     size_t name_##_required_size = sizeof(g_params.name_.value);                                             \
     if (nvs_get_blob(handle, g_params.name_.key, &g_params.name_.value, &name_##_required_size) != ESP_OK) { \
         g_params.name_.value = g_params.name_.default_value;                                                 \
-        g_params.name_.dirty = true;                                                                         \
+        g_params.name_.is_default = true;                                                                    \
+        g_params.name_.is_dirty = true;                                                                      \
     }                                                                                                        \
     else {                                                                                                   \
-        g_params.name_.dirty = false;                                                                        \
+        g_params.name_.is_dirty = false;                                                                     \
+        if (g_params.name_.value != g_params.name_.default_value) {                                          \
+            g_params.name_.is_default = false;                                                               \
+        }                                                                                                    \
+        else {                                                                                               \
+            g_params.name_.is_default = true;                                                                \
+        }                                                                                                    \
     }
 #define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn)                            \
     size_t name_##_required_size = sizeof(g_params.name_.value);                                             \
     if (nvs_get_blob(handle, g_params.name_.key, &g_params.name_.value, &name_##_required_size) != ESP_OK) { \
         memcpy(&g_params.name_.value, &g_params.name_.default_value, sizeof(g_params.name_.value));          \
-        g_params.name_.dirty = true;                                                                         \
+        g_params.name_.is_dirty = true;                                                                      \
+        g_params.name_.is_default = true;                                                                    \
     }                                                                                                        \
     else {                                                                                                   \
-        g_params.name_.dirty = false;                                                                        \
+        g_params.name_.is_dirty = false;                                                                     \
+        if (memcmp(&g_params.name_.value, &g_params.name_.default_value, size_ * sizeof(type_)) != 0) {      \
+            g_params.name_.is_default = false;                                                               \
+        }                                                                                                    \
+        else {                                                                                               \
+            g_params.name_.is_default = true;                                                                \
+        }                                                                                                    \
     }
 
         PARAMETER_TABLE
@@ -414,6 +445,17 @@ void ParamManager_Init(void)
 
         nvs_close(handle);
     }
+
+#ifdef DEBUG_INIT
+    const ParamDescriptor_t* p;
+    p = ParamsDescriptor;
+    printf("\nParameters pulled from nvs:\n");
+    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+        printf("%24s %s%s\n", p->name, *(p->is_default) ? "Factory" : "NOT Factory", *(p->is_dirty) ? " | dirty" : " ");
+        p++;
+    }
+    printf("\n");
+#endif  // DEBUG_INIT
 
     // Periodic save timer
     TimerHandle_t xTimer = xTimerCreate(
@@ -439,4 +481,26 @@ enum EParamDataTypes ParamManager_GetTypeByName(const char* name)
         }
     }
     return type_undefined;
+}
+
+void ParamManager_PrintEditableParams(void)
+{
+    const ParamDescriptor_t* p;
+    char buf[DEFAULT_BUFFER_SIZE];
+    p = ParamsDescriptor;
+
+    for (uint32_t i = 0; i < ParamsDescriptorSize; i++) {
+        if (p->secure_level >= SecureLevel()) {
+            /* Make sure to dereference the is_dirty and is_default pointers */
+            printf("%24s (%c%c)", p->name, *(p->is_dirty) ? '*' : ' ', *(p->is_default) ? 'F' : ' ');
+
+            if (Param_Print(p->name, buf) == ESP_OK) {
+                printf(" = %s\n", buf);
+            }
+            else {
+                printf("\n");
+            }
+        }
+        p++;
+    }
 }
