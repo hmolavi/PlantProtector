@@ -20,7 +20,7 @@ uint8_t SecureLevel(void);
 
 /// @brief Modify the secure level
 /// @param new_secure_level 
-/// @return 
+/// @return esp_err_t
 esp_err_t SecureLevel_Change(uint8_t new_secure_level);
 
 #endif
