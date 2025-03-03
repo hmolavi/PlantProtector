@@ -23,7 +23,8 @@
     CMD("password", "Set new WiFi password", "<new_password>", Cmd_Password) \
     CMD("reset", "Reboot the board", "", Cmd_Reboot)                         \
     CMD("connect", "Attempt to connect to wifi", "", Cmd_Connect)            \
-    CMD("save", "Save the dirty parameters", "", Cmd_Save)
+    CMD("save", "Save the dirty parameters", "", Cmd_Save)                   \
+    CMD("b", "Change the brightness", "<brightness value>", Cmd_Brightness)
 
 int CMD_CommandsInit(void)
 {
