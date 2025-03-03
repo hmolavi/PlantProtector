@@ -126,25 +126,26 @@ PARAMETER_TABLE
 #undef ARRAY
 
 const ParamDescriptor_t g_params_descriptor[] = {
-#define PARAM(secure_lvl_, type__, name_, default_value_, description_, pn) \
-    {                                                                       \
-        .secure_level = secure_lvl_,                                        \
-        .name = #name_,                                                     \
-        .type = type_##type__,                                              \
-        .value = &g_params.name_.value,                                     \
-        .size = sizeof(type__),                                             \
-        .is_dirty = &g_params.name_.is_dirty,                               \
-        .is_default = &g_params.name_.is_default,                           \
+#define PARAM(secure_lvl_, type__, name_, ...)    \
+    {                                             \
+        .secure_level = secure_lvl_,              \
+        .name = #name_,                           \
+        .type = type_##type__,                    \
+        .value = &g_params.name_.value,           \
+        .size = sizeof(type__),                    \
+        .is_dirty = &g_params.name_.is_dirty,     \
+        .is_default = &g_params.name_.is_default, \
     },
-#define ARRAY(secure_lvl_, type__, size_, name_, default_value_, description_, pn) \
-    {                                                                              \
-        .secure_level = secure_lvl_,                                               \
-        .name = #name_,                                                            \
-        .type = type_##array_##type__,                                             \
-        .value = g_params.name_.value,                                             \
-        .size = size_,                                                             \
-        .is_dirty = &g_params.name_.is_dirty,                                      \
-        .is_default = &g_params.name_.is_default,                                  \
+
+#define ARRAY(secure_lvl_, type_, size_, name_, ...) \
+    {                                                \
+        .secure_level = secure_lvl_,                 \
+        .name = #name_,                              \
+        .type = type_array_##type_,                  \
+        .value = g_params.name_.value,               \
+        .size = size_,                               \
+        .is_dirty = &g_params.name_.is_dirty,        \
+        .is_default = &g_params.name_.is_default,    \
     },
     PARAMETER_TABLE
 #undef PARAM
@@ -471,6 +472,22 @@ void ParamManager_Init(void)
     else {
         ESP_LOGE(TAG, "Failed to create periodic timer");
     }
+}
+
+ParamDescriptor_t* ParamManager_LookUp(const char* name)
+{
+    const ParamDescriptor_t* p = g_params_descriptor;
+    for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
+        /*
+            Since this function will be used mainly for user
+            inputs, we can be lenient with case sensitivity
+        */
+        if (strcasecmp(name, p->name) == 0) {
+            return p;
+        }
+        p++;
+    }
+    return NULL;
 }
 
 enum EParamDataTypes ParamManager_GetTypeByName(const char* name)
