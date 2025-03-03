@@ -5,6 +5,7 @@ idf_component_register(
                         commands_registration.c
                         commands.c
                         app_main.c
+                        parser.c
                     INCLUDE_DIRS 
 						.
                         ../components/cmd_nvs
