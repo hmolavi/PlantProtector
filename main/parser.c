@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "../../components/library/include/param_manager.h"
+#include "../../components/parameters/include/param_manager.h"
 
 void strip_quotes(char* str)
 {

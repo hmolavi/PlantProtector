@@ -13,6 +13,7 @@ idf_component_register(
                         ../components/vfs
                         ../components/fatfs
                         ../components/library
+                        ../components/parameters
                     REQUIRES 
 						console 
 						nvs_flash 

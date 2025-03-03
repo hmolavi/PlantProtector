@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../components/library/include/param_manager.h"
+#include "../components/parameters/include/param_manager.h"
 #include "cmd_nvs.h"
 #include "cmd_system.h"
 #include "esp_console.h"
@@ -26,7 +26,6 @@
 #include "freertos/timers.h"
 #include "include/ascii_art.h"
 #include "include/commands_registration.h"
-#include "include/parameters.h"
 #include "include/wifi.h"
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -63,7 +62,7 @@ void app_main(void)
     PrintAsciiArt();
 
     // Initialize NVS
-    Param_ManagerInit();
+    ParamManager_Init();
 
     const char *ssid = Param_GetSsid(NULL);
     char *default_ssid = DEFAULT_SSID;

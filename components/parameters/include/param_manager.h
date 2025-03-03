@@ -114,6 +114,138 @@ enum EParamDataTypes {
     type_undefined,
 };
 
+/// @brief Union type for parameter values
+///        Used to create another set of Setters/Getters/Print
+///        functions for the ParamDescriptor_t
+typedef union {
+    bool b;
+    char c;
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    int32_t i32;
+    float f;
+    char* str;
+    int32_t* i32_array;
+} ParamValue_t;
+
+typedef esp_err_t (*ParamGetFn)(ParamValue_t*);
+typedef esp_err_t (*ParamSetFn)(ParamValue_t);
+typedef esp_err_t (*ParamPrintFn)(char*, size_t);
+
+/*
+esp_err_t Param_Set_uint32_t(ParamValue_t *cur_val, ParamValue_t *new_val) {
+    if (new_val.b != true && new_val.b != false) return ESP_ERR_INVALID_ARG;
+    *(bool*)desc->value = new_val.b;
+    return ESP_OK;
+}
+
+esp_err_t BoolParam_Set(ParamValue_t new_val) {
+    if (new_val.b != true && new_val.b != false) return ESP_ERR_INVALID_ARG;
+    *(bool*)desc->value = new_val.b;
+    return ESP_OK;
+}
+
+esp_err_t BoolParam_Print(char* buffer, size_t buf_size) {
+    snprintf(buffer, buf_size, "%s", *(bool*)desc->value ? "true" : "false");
+    return ESP_OK;
+}
+
+// String array functions
+esp_err_t StringParam_Set(ParamValue_t new_val) {
+    strncpy((char*)desc->value, new_val.str, desc->size);
+    ((char*)desc->value)[desc->size-1] = '\0'; // Ensure termination
+    return ESP_OK;
+}
+
+esp_err_t StringParam_Print(char* buffer, size_t buf_size) {
+    snprintf(buffer, buf_size, "\"%s\"", (char*)desc->value);
+    return ESP_OK;
+}
+*/
+
+//--------------------------------------------------
+// Scalar type functions
+//--------------------------------------------------
+
+/*
+#define GENERATE_SCALAR_FUNCTIONS(TYPE, FMT, CAST)              \
+    esp_err_t TYPE##_Get(ParamValue_t* out)                     \
+    {                                                           \
+        out->CAST = *(typeof(out->CAST)*)desc->value;           \
+        return ESP_OK;                                          \
+    }                                                           \
+    esp_err_t TYPE##_Set(ParamValue_t in)                       \
+    {                                                           \
+        *(typeof(in.CAST)*)desc->value = in.CAST;               \
+        return ESP_OK;                                          \
+    }                                                           \
+    esp_err_t TYPE##_Print(char* buf, size_t sz)                \
+    {                                                           \
+        snprintf(buf, sz, FMT, *(typeof(in.CAST)*)desc->value); \
+        return ESP_OK;                                          \
+    }
+
+GENERATE_SCALAR_FUNCTIONS(bool, "%s", b)
+GENERATE_SCALAR_FUNCTIONS(char, "'%c'", c)
+GENERATE_SCALAR_FUNCTIONS(uint8_t, "%" PRIu8, u8)
+GENERATE_SCALAR_FUNCTIONS(uint16_t, "%" PRIu16, u16)
+GENERATE_SCALAR_FUNCTIONS(uint32_t, "%" PRIu32, u32)
+GENERATE_SCALAR_FUNCTIONS(int32_t, "%" PRId32, i32)
+GENERATE_SCALAR_FUNCTIONS(float, "%.6g", f)
+
+// Special bool handling
+esp_err_t bool_Print(char* buf, size_t sz)
+{
+    snprintf(buf, sz, "%s", *(bool*)desc->value ? "true" : "false");
+    return ESP_OK;
+}
+
+//--------------------------------------------------
+// Array type functions
+//--------------------------------------------------
+esp_err_t array_char_Get(ParamValue_t* out)
+{
+    out->str = (char*)desc->value;
+    return ESP_OK;
+}
+esp_err_t array_char_Set(ParamValue_t in)
+{
+    strncpy((char*)desc->value, in.str, desc->size);
+    ((char*)desc->value)[desc->size - 1] = '\0';
+    return ESP_OK;
+}
+esp_err_t array_char_Print(char* buf, size_t sz)
+{
+    snprintf(buf, sz, "\"%s\"", (char*)desc->value);
+    return ESP_OK;
+}
+
+// int32 array functions
+esp_err_t array_int32_t_Get(ParamValue_t* out)
+{
+    out->i32_array = (int32_t*)desc->value;
+    return ESP_OK;
+}
+esp_err_t array_int32_t_Set(ParamValue_t in)
+{
+    memcpy(desc->value, in.i32_array, desc->size * sizeof(int32_t));
+    return ESP_OK;
+}
+esp_err_t array_int32_t_Print(char* buf, size_t sz)
+{
+    char* ptr = buf;
+    int32_t* arr = (int32_t*)desc->value;
+    for (size_t i = 0; i < desc->size; i++) {
+        ptr += snprintf(ptr, sz - (ptr - buf), "%s%d", (i > 0) ? "," : "", arr[i]);
+        if (ptr - buf >= sz) break;
+    }
+    return ESP_OK;
+}
+*/
+
+/// @brief Descriptor for parameters, used to quickly find and
+///        modify parameters from console
 typedef struct {
     const uint8_t secure_level;
     const char* name;
@@ -123,12 +255,20 @@ typedef struct {
     size_t size;       // For arrays, size in elements; for strings, max length; for others, size of data type
     bool* is_dirty;    // pointer to the dirty flag
     bool* is_default;  // pointer to the is_default flag
+
+    // Function pointers
+    ParamGetFn Get;
+    ParamSetFn Set;
+    ParamPrintFn Print;
 } ParamDescriptor_t;
+
+
 
 extern const ParamDescriptor_t g_params_descriptor[];
 const uint32_t g_params_descriptor_size;
 
 esp_err_t Param_Print(const char* name, char* out_buffer);
+
 esp_err_t Param_PrintWithBufferSize(const char* name, char* out_buffer, const size_t buffer_size);
 
 esp_err_t Param_PrintArray(const char* name, char** out_buffer, uint32_t* out_buffer_size);
@@ -146,6 +286,12 @@ void ParamManager_SaveDirtyParameters(void);
 ///@param name Name of the parameter
 ///@return enum EParamDataTypes
 enum EParamDataTypes ParamManager_GetTypeByName(const char* name);
+
+///@brief Find the parameter based on name
+///
+///@param name Name of the parameter
+///@return ParamDescriptor_t*
+ParamDescriptor_t* ParamManager_LookUp(const char* name);
 
 /// @brief Print a list of editable parameters based on current secure level
 void ParamManager_PrintEditableParams(void);

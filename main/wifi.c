@@ -17,7 +17,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "../components/library/include/param_manager.h"
+#include "../components/parameters/include/param_manager.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_wifi.h"

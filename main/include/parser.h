@@ -10,7 +10,7 @@
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
-#include "../../components/library/include/param_manager.h"
+#include "../../components/parameters/include/param_manager.h"
 
 void strip_quotes(char* str);
 

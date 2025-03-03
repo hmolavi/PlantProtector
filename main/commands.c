@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../components/library/include/param_manager.h"
-#include "../components/library/include/secure_level.h"
+#include "../components/parameters/include/param_manager.h"
+#include "../components/parameters/include/secure_level.h"
 #include "esp_console.h"
 #include "esp_err.h"
 #include "esp_log.h"
