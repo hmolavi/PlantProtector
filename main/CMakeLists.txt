@@ -8,10 +8,6 @@ idf_component_register(
                         parser.c
                     INCLUDE_DIRS 
 						.
-                        ../components/cmd_nvs
-                        ../components/cmd_system 
-                        ../components/vfs
-                        ../components/fatfs
                         ../components/library
                         ../components/parameters
                     REQUIRES 

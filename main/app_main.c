@@ -13,15 +13,10 @@
 #include <string.h>
 
 #include "../components/parameters/include/param_manager.h"
-#include "cmd_nvs.h"
-#include "cmd_system.h"
-#include "esp_console.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_timer.h"
-#include "esp_vfs_dev.h"
-#include "esp_vfs_fat.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 #include "include/ascii_art.h"
@@ -124,8 +119,6 @@ void app_main(void)
     /* Register commands */
     printf("Registering commands...");
     esp_console_register_help_command();
-    register_system();
-    register_nvs();
     CMD_CommandsInit();
     printf("Done\n");
 
