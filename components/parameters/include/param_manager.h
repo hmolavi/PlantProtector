@@ -1,6 +1,6 @@
 ///@file param_manager.h
 ///@author Hossein Molavi (hmolavi@uwaterloo.ca)
-///
+///@brief Defined the program variable parameters used in the PlantProtector project.
 ///@version 1.2
 ///@date 2025-03-02
 ///
@@ -15,29 +15,6 @@
 #include <string.h>
 
 #include "esp_err.h"
-
-#define ARRAY_INIT(...) {__VA_ARGS__}
-
-///@brief Program variable parameters. Format is
-///       (securelevel, type, variable name, default value, description,
-///       PascalName). For arrays, you must set the max
-///       length as well.
-///
-///       Available data types are:
-///       char, uint8_t, uint16_t, uint32_t, int32_t, float
-#define PARAMETER_TABLE                                                              \
-    PARAM(2, char, exampleChar, 'A', "example char", ExampleChar)                    \
-    PARAM(2, uint8_t, exampleUint8, 255, "example uint8_t", ExampleUint8)            \
-    PARAM(2, uint16_t, exampleUint16, 65535, "example uint16_t", ExampleUint16)      \
-    PARAM(2, uint32_t, exampleUint32, 4294967295, "example uint32_t", ExampleUint32) \
-    PARAM(2, int32_t, exampleInt32, -2147483648, "example int32_t", ExampleInt32)    \
-    PARAM(2, float, exampleFloat, 3.14, "example float", ExampleFloat)               \
-    PARAM(2, int32_t, brightness, 50, "brightness duh", Brightness)                  \
-    PARAM(2, uint32_t, interval, 1000, "random interval", Internval)                 \
-    PARAM(2, bool, seriousmode, false, "Determines AIs tone of voice", SeriousMode)  \
-    ARRAY(2, char, 32, ssid, "fakessid", "WiFi ssid", Ssid)                          \
-    ARRAY(2, char, 64, password, "fakepass", "WiFi password", Password)              \
-    ARRAY(2, int32_t, 4, myarray, ARRAY_INIT(1, 0, 0, 0), "example int array", MyArray)
 
 #define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
     struct {                                                               \
@@ -61,7 +38,7 @@
         const char* const key;                                                    \
     } name_;
 struct ParamMasterControl {
-    PARAMETER_TABLE
+    #include "../param_table.inc"
 };
 #undef PARAM
 #undef ARRAY
@@ -86,7 +63,7 @@ extern struct ParamMasterControl g_params;
     const type_* Param_Get##pn(size_t* out_length);                               \
     esp_err_t Param_Copy##pn(type_* buffer, size_t buffer_size);                  \
     esp_err_t Param_Reset##pn(void);
-PARAMETER_TABLE
+#include "../param_table.inc"
 #undef PARAM
 #undef ARRAY
 

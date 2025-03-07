@@ -56,7 +56,8 @@ static const char* TAG = "param_manager.c";
         .key = #name_,                                                            \
     },
 struct ParamMasterControl g_params = {
-    PARAMETER_TABLE};
+#include "param_table.inc" 
+};
 #undef PARAM
 #undef ARRAY
 
@@ -121,18 +122,18 @@ struct ParamMasterControl g_params = {
         memcpy(&g_params.name_.value, &g_params.name_.default_value, size_ * sizeof(type_)); \
         return ESP_OK;                                                                       \
     }
-PARAMETER_TABLE
+#include "param_table.inc"
 #undef PARAM
 #undef ARRAY
 
-const ParamDescriptor_t g_params_descriptor[] = {
+    const ParamDescriptor_t g_params_descriptor[] = {
 #define PARAM(secure_lvl_, type__, name_, ...)    \
     {                                             \
         .secure_level = secure_lvl_,              \
         .name = #name_,                           \
         .type = type_##type__,                    \
         .value = &g_params.name_.value,           \
-        .size = sizeof(type__),                    \
+        .size = sizeof(type__),                   \
         .is_dirty = &g_params.name_.is_dirty,     \
         .is_default = &g_params.name_.is_default, \
     },
@@ -147,7 +148,7 @@ const ParamDescriptor_t g_params_descriptor[] = {
         .is_dirty = &g_params.name_.is_dirty,        \
         .is_default = &g_params.name_.is_default,    \
     },
-    PARAMETER_TABLE
+#include "param_table.inc"
 #undef PARAM
 #undef ARRAY
 };
@@ -377,7 +378,7 @@ void ParamManager_SaveDirtyParameters(void)
         g_params.name_.is_dirty = false;                                                             \
         parametersChanged++;                                                                         \
     }
-    PARAMETER_TABLE
+#include "param_table.inc"
 #undef PARAM
 #undef ARRAY
     if (parametersChanged > 0) {
@@ -440,7 +441,7 @@ void ParamManager_Init(void)
         }                                                                                                    \
     }
 
-        PARAMETER_TABLE
+#include "param_table.inc"
 #undef PARAM
 #undef ARRAY
 
@@ -483,7 +484,7 @@ ParamDescriptor_t* ParamManager_LookUp(const char* name)
             inputs, we can be lenient with case sensitivity
         */
         if (strcasecmp(name, p->name) == 0) {
-            return p;
+            return (ParamDescriptor_t*)p;
         }
         p++;
     }
