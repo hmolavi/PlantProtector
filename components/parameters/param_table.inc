@@ -19,6 +19,8 @@
  * 
  * For array parameters, the maximum length must be specified.
  * 
+ * Refer to secure_level.c for more info on security levels 
+ * 
  * Macros:
  * - PARAM(secure_level, type, name, default, description, PascalName)
  *   Example:
@@ -49,6 +51,7 @@
 #define ARRAY(...)
 #endif
 
+PARAM(0, int32_t, serialnumber, 0, "Device's unique identifier", SerialNumber)
 PARAM(2, int32_t, brightness, 50, "brightness duh", Brightness)
 PARAM(2, uint32_t, interval, 1000, "random interval", Internval)
 PARAM(2, bool, seriousmode, false, "Determines AIs tone of voice", SeriousMode)
