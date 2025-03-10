@@ -7,7 +7,7 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#include "include/commands_registration.h"
+#include "commands_registration.h"
 
 #include <stdio.h>
 #include <stdlib.h>

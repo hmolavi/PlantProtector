@@ -4,7 +4,7 @@ idf_component_register(
                         secure_level.c
                     INCLUDE_DIRS 
                         .
-                        ../../main
+                        ./include
                     REQUIRES
                         nvs_flash
                     )
