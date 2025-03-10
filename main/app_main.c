@@ -7,21 +7,31 @@
 ///@copyright Copyright (c) 2025
 ///
 
+/*
+    -*-C-*-
+*/
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../components/parameters/include/param_manager.h"
+/* Components */
+#include "adc_manager.h"
+#include "gpio_manager.h"
+#include "param_manager.h"
+
+/* Other tings */
+#include "thermistor.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
-#include "include/ascii_art.h"
-#include "include/commands_registration.h"
-#include "include/wifi.h"
+#include "ascii_art.h"
+#include "commands_registration.h"
+#include "wifi.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "private.h"  // Holds the wifi ssid and password
@@ -46,6 +56,12 @@ void wifi_task(void *arg)
     Wifi_TryConnect();
 
     while (1) { /* Weeeeeee */
+        esp_err_t ret;
+
+        ret = ADC_Update();
+        if(ret == ESP_OK) {
+            Thermistor_Print();
+        }
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -56,9 +72,26 @@ void app_main(void)
 
     PrintAsciiArt();
 
-    // Initialize NVS
-    ParamManager_Init();
+    /* Initialize Components */ 
+    esp_err_t ret;
 
+    ret = ParamManager_Init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to init Parameters");
+        return;
+    }
+    ret = GPIO_Init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to init GPIO");
+        return;
+    }
+    ret = ADC_Init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to init ADC");
+        return;
+    }
+
+    /* Update wifi name and password */
     const char *ssid = Param_GetSsid(NULL);
     char *default_ssid = DEFAULT_SSID;
     if (strcmp(ssid, default_ssid) != 0) {
@@ -77,6 +110,7 @@ void app_main(void)
 
     /////////////////////////////////////////////////
 
+#ifdef PARAM_TESTING
     printf("Brightness upon wake: %d\n", Param_GetBrightness());
 
     // Set parameter with type safety
@@ -108,6 +142,7 @@ void app_main(void)
     printf("\n");
 
     ESP_ERROR_CHECK(Param_SetMyArray(local_copy, num_elements));
+#endif
 
     /////////////////////////////////////////////////
     printf("\n\n\n");

@@ -6,10 +6,16 @@ idf_component_register(
                         commands.c
                         app_main.c
                         parser.c
+                        thermistor.c
                     INCLUDE_DIRS 
 						.
+                        ./include
                         ../components/library
+                        ../components/library/include
                         ../components/parameters
+                        ../components/parameters/include
+                        ../components/peripherals
+                        ../components/peripherals/include
                     REQUIRES 
 						console 
 						nvs_flash 
