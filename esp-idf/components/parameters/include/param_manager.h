@@ -37,16 +37,16 @@
         bool is_default;                                                          \
         const char* const key;                                                    \
     } name_;
-struct ParamMasterControl {
-    #include "../param_table.inc"
-};
+typedef struct ParamMasterControl_s {
+#include "param_table.inc"
+} ParamMasterControl_t;
 #undef PARAM
 #undef ARRAY
 
 /// @brief Program variables, stored on the SRAM. Initially variables
 ///        will be pulled from the NVS Flash, if they dont exist in
 ///        flash, they will be set to default value. Global variable
-extern struct ParamMasterControl g_params;
+extern ParamMasterControl_t g_params;
 
 // Getter and Setters for truly immutable access and no memory-tracking-hassle!
 ///@brief PARAM Getters, Setters, and Resetters are all trivial.
@@ -63,7 +63,7 @@ extern struct ParamMasterControl g_params;
     const type_* Param_Get##pn(size_t* out_length);                               \
     esp_err_t Param_Copy##pn(type_* buffer, size_t buffer_size);                  \
     esp_err_t Param_Reset##pn(void);
-#include "../param_table.inc"
+#include "param_table.inc"
 #undef PARAM
 #undef ARRAY
 
@@ -71,7 +71,7 @@ extern struct ParamMasterControl g_params;
 ///
 ///        enum values are lowercase because they will be used
 ///        directly from the PARAM and ARRAY macros
-enum EParamDataTypes {
+typedef enum ParamDataTypes_e {
     type_char,
     type_bool,
     type_uint8_t,
@@ -89,7 +89,7 @@ enum EParamDataTypes {
     type_array_float,
 
     type_undefined,
-};
+} ParamDataTypes_t;
 
 /// @brief Union type for parameter values
 ///        Used to create another set of Setters/Getters/Print
@@ -226,7 +226,7 @@ esp_err_t array_int32_t_Print(char* buf, size_t sz)
 typedef struct {
     const uint8_t secure_level;
     const char* name;
-    const enum EParamDataTypes type;
+    const ParamDataTypes_t type;
     const char* description;
     void* value;       // pointer to the parameter value in g_params
     size_t size;       // For arrays, size in elements; for strings, max length; for others, size of data type
@@ -239,10 +239,9 @@ typedef struct {
     ParamPrintFn Print;
 } ParamDescriptor_t;
 
-
-
 extern const ParamDescriptor_t g_params_descriptor[];
 const uint32_t g_params_descriptor_size;
+
 
 esp_err_t Param_Print(const char* name, char* out_buffer);
 
@@ -253,7 +252,7 @@ esp_err_t Param_PrintArray(const char* name, char** out_buffer, uint32_t* out_bu
 /// @brief Attempts to pull g_params from nvs flash, if value failed or non-existant,
 ///        value will be set to default and dirty flag will be set to true. Also
 ///        creates periodic timer for nvs parameter saves; set to 30 seconds
-void ParamManager_Init(void);
+esp_err_t ParamManager_Init(void);
 
 /// @brief Identifies parameters that have been modified (dirty) and saves them to nvs
 void ParamManager_SaveDirtyParameters(void);
@@ -261,8 +260,8 @@ void ParamManager_SaveDirtyParameters(void);
 ///@brief Get the parameter data type
 ///
 ///@param name Name of the parameter
-///@return enum EParamDataTypes
-enum EParamDataTypes ParamManager_GetTypeByName(const char* name);
+///@return enum ParamDataTypes_t
+ParamDataTypes_t ParamManager_GetTypeByName(const char* name);
 
 ///@brief Find the parameter based on name
 ///

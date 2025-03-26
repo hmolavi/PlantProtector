@@ -7,7 +7,7 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#include "include/param_manager.h"
+#include "param_manager.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -20,9 +20,9 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
-#include "include/secure_level.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "secure_level.h"
 
 static const char* TAG = "param_manager.c";
 
@@ -55,8 +55,8 @@ static const char* TAG = "param_manager.c";
         .default_value = default_value_,                                          \
         .key = #name_,                                                            \
     },
-struct ParamMasterControl g_params = {
-#include "param_table.inc" 
+ParamMasterControl_t g_params = {
+#include "param_table.inc"
 };
 #undef PARAM
 #undef ARRAY
@@ -126,7 +126,7 @@ struct ParamMasterControl g_params = {
 #undef PARAM
 #undef ARRAY
 
-    const ParamDescriptor_t g_params_descriptor[] = {
+const ParamDescriptor_t g_params_descriptor[] = {
 #define PARAM(secure_lvl_, type__, name_, ...)    \
     {                                             \
         .secure_level = secure_lvl_,              \
@@ -154,6 +154,26 @@ struct ParamMasterControl g_params = {
 };
 const uint32_t g_params_descriptor_size = sizeof(g_params_descriptor) / sizeof(g_params_descriptor[0]);
 
+/**
+ * @brief Prints the value of a parameter to the provided buffer.
+ *
+ * This function searches for a parameter by its name and prints its value
+ * to the provided output buffer, ensuring the output does not exceed the
+ * specified buffer size. The function supports various data types including
+ * boolean, character, unsigned integers, signed integers, floating point,
+ * and character arrays.
+ *
+ * @param name The name of the parameter to print.
+ * @param out_buffer The buffer where the parameter value will be printed.
+ * @param buffer_size The size of the output buffer.
+ *
+ * @return
+ *     - ESP_OK: Successfully printed the parameter value.
+ *     - ESP_ERR_INVALID_ARG: Invalid argument (e.g NULL pointers).
+ *     - ESP_ERR_NOT_SUPPORTED: The parameter type is not supported (i.e array types excluding char arrays).
+ *     - ESP_ERR_INVALID_SIZE: Not enough buffer size given for the job
+ *     - ESP_ERR_NOT_FOUND: The parameter with the specified name was not found.
+ */
 esp_err_t Param_PrintWithBufferSize(const char* name, char* out_buffer, const size_t buffer_size)
 {
     if (name == NULL || out_buffer == NULL) return ESP_ERR_INVALID_ARG;
@@ -164,57 +184,74 @@ esp_err_t Param_PrintWithBufferSize(const char* name, char* out_buffer, const si
 
         // Reject array types with the exception of type_array_char
         if (desc->type >= type_array_bool) {
-            return ESP_ERR_INVALID_ARG;
+            return ESP_ERR_NOT_SUPPORTED;
         }
-
+        int required_size = 0;
         switch (desc->type) {
             case type_bool: {
                 bool val = *(bool*)desc->value;
-                snprintf(out_buffer, buffer_size, "%s", val ? "true" : "false");
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%s", val ? "true" : "false") + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_char: {
                 char c = *(char*)desc->value;
-                snprintf(out_buffer, buffer_size, "%c", c);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%c", c) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_uint8_t: {
                 uint8_t val = *(uint8_t*)desc->value;
-                snprintf(out_buffer, buffer_size, "%" PRIu8, val);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%" PRIu8, val) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_uint16_t: {
                 uint16_t val = *(uint16_t*)desc->value;
-                snprintf(out_buffer, buffer_size, "%" PRIu16, val);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%" PRIu16, val) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_uint32_t: {
                 uint32_t val = *(uint32_t*)desc->value;
-                snprintf(out_buffer, buffer_size, "%" PRIu32, val);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%" PRIu32, val) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_int32_t: {
                 int32_t val = *(int32_t*)desc->value;
-                snprintf(out_buffer, buffer_size, "%" PRId32, val);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%" PRId32, val) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_float: {
                 float val = *(float*)desc->value;
-                snprintf(out_buffer, buffer_size, "%.6g", val);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%.6g", val) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             case type_array_char: {
                 char* str = (char*)desc->value;
-                snprintf(out_buffer, buffer_size, "%s", str);
-                return ESP_OK;
+                required_size = snprintf(out_buffer, buffer_size, "%s", str) + 1;
+                return (required_size > buffer_size) ? ESP_ERR_INVALID_SIZE : ESP_OK;
             }
             default:
+                /* Should never reach here,
+                   we reject unsupported types earlier */
                 return ESP_ERR_NOT_SUPPORTED;
         }
     }
     return ESP_ERR_NOT_FOUND;
 }
 
+/**
+ * @brief Prints the value of a parameter to the provided buffer.
+ *
+ * This function retrieves the parameter specified by the name and prints its value
+ * into the provided output buffer. The buffer size is set to a DEFAULT_BUFFER_SIZE of 128.
+ *
+ * @param name The name of the parameter to print.
+ * @param out_buffer The buffer where the parameter value will be printed.
+ *
+ * @return
+ *     - ESP_OK: Successfully printed the parameter value.
+ *     - ESP_ERR_INVALID_ARG: Invalid argument (e.g., NULL pointers or unsupported type).
+ *     - ESP_ERR_NOT_SUPPORTED: The parameter type is not supported (i.e array types excluding char arrays).
+ *     - ESP_ERR_NOT_FOUND: The parameter with the specified name was not found.
+ */
 esp_err_t Param_Print(const char* name, char* out_buffer)
 {
     return Param_PrintWithBufferSize(name, out_buffer, DEFAULT_BUFFER_SIZE);
@@ -397,7 +434,7 @@ static void save_dirty_parameters_callback(TimerHandle_t xTimer)
 /// @brief Attempt to pull g_params from nvs flash, if value failed or non-existant,
 ///        value will be set to default and dirty flag will be set to true. Also
 ///        creates periodic timer for nvs parameter saves; set to 30 seconds
-void ParamManager_Init(void)
+esp_err_t ParamManager_Init(void)
 {
     // NVS initialization
     esp_err_t ret = nvs_flash_init();
@@ -472,7 +509,10 @@ void ParamManager_Init(void)
     }
     else {
         ESP_LOGE(TAG, "Failed to create periodic timer");
+        return ESP_FAIL;
     }
+
+    return ESP_OK;
 }
 
 ParamDescriptor_t* ParamManager_LookUp(const char* name)
@@ -491,7 +531,7 @@ ParamDescriptor_t* ParamManager_LookUp(const char* name)
     return NULL;
 }
 
-enum EParamDataTypes ParamManager_GetTypeByName(const char* name)
+ParamDataTypes_t ParamManager_GetTypeByName(const char* name)
 {
     for (uint32_t i = 0; i < g_params_descriptor_size; i++) {
         if (strcmp(g_params_descriptor[i].name, name) == 0) {

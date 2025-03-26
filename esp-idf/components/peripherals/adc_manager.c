@@ -14,7 +14,7 @@
  * @copyright Copyright (c) 2025
  */
 
-#include "include/adc_manager.h"
+#include "adc_manager.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -156,7 +156,7 @@ esp_err_t ADC_Update(void)
 
 uint32_t ADC_Read(ADCChannel_t chan)
 {
-    if (chan > ADC_MAX) {
+    if (chan >= ADC_MAX) {
         ESP_LOGE(TAG, "Error: Channel %u is out of range 0..%u in %s()", chan,
                  ADC_MAX - 1, __FUNCTION__);
         return 0;

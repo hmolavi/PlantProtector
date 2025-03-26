@@ -19,18 +19,18 @@
 
 /**
  * Default reference voltage used for analog components, in mV
- * 
+ *
  * Last time I measured with multimeter it was 3270 mV on the S3 dev board
  * @todo: Check this value later for confirmation
  * @todo: Update this value if using another board
- * 
+ *
  * Used for esp_adc_cal_characterize() and ADC calibration in other places
  */
 #define DEFAULT_VREF 3270.0
 
 typedef enum ADCChannel_e {
 #define ADC(name, unit, channel, attenuation) ADC_##name,
-#include "../adc_table.inc"
+#include "adc_table.inc"
     ADC_MAX
 } ADCChannel_t;
 

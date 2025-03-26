@@ -4,21 +4,21 @@
 ///@date 2025-02-13
 ///
 
-// #include "include/commands.h"
+// #include "commands.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../components/parameters/include/param_manager.h"
-#include "../components/parameters/include/secure_level.h"
+#include "param_manager.h"
+#include "secure_level.h"
 #include "esp_console.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
-#include "include/ascii_art.h"
-#include "include/parser.h"
-#include "include/wifi.h"
+#include "ascii_art.h"
+#include "parser.h"
+#include "wifi.h"
 
 esp_err_t Cmd_Art(int argc, char **argv)
 {
@@ -302,3 +302,69 @@ esp_err_t Cmd_EditParam(int argc, char **argv)
 //     printf("%s updated successfully\n", desc->name);
 //     return ESP_OK;
 // }
+
+
+
+// /* Allow the user to change GPIOs */
+// ParserReturnVal_t CmdGPIO(int mode)
+// {
+//     char *name;
+//     uint32_t pin, val;
+//     uint32_t rc;
+
+//     if (mode == CMD_SHORT_HELP) return CmdReturnOk;
+//     if (mode == CMD_LONG_HELP) {
+//         printf(
+//             "gpio <pinname> {setting}\n"
+//             "\n"
+//             "   Set, reset and query GPIO pins.  Given no arguments, print\n"
+//             "the gpio pin names. With one argument, show the current state.\n"
+//             "With two arguments, set the gpio to the requested state\n"
+//             "\n"
+//             "Valid Pin Names are:\n\n");
+//         GPIOPrintNames();
+//         printf("\n");
+//         return CmdReturnOk;
+//     }
+
+//     /* Fetch the pin name */
+//     rc = fetch_string_arg(&name);
+//     if (rc) {
+//         printf("You must specify the pin name.  Valid names are:\n\n");
+//         GPIOPrintNames();
+//         printf("\n");
+//         GPIOPrintNamesBluetooth();
+//         return CmdReturnBadParameter1;
+//     }
+
+//     /* Try to find it */
+//     pin = GPIOFindPin(name);
+//     if (pin == MAX_GPIO_PINS) {
+//         printf("Pin name \"%s\" not found. Valid names are:\n\n", name);
+//         GPIOPrintNames();
+//         printf("\n");
+//         return CmdReturnBadParameter1;
+//     }
+
+//     /* Look for a last argument, if there is a value, use it to set the
+//      * GPIO
+//      */
+//     rc = fetch_uint32_arg(&val);
+//     if (rc) {
+//         /* No value, just read and print the gpio */
+//         val = GPIORead(pin);
+//         printf("%s : %u\n", name, val ? 1 : 0);
+
+//         /* And give info to anybody listening on Bluetooth */
+//         BluetoothPrintf("{\"name\":\"%s\",\"state\":%u,\"description\":\"%s\"}",
+//                         GPIOPins[pin].name, val, GPIOPins[pin].desc);
+//         return CmdReturnOk;
+//     }
+//     else {
+//         /* A value to use */
+//         GPIOSet(pin, val);
+//     }
+//     return CmdReturnOk;
+// }
+// ADD_CMD("gpio", CmdGPIO, "<pinname> {val} Set/read GPIO")
+// ADD_TASK(GPIOTask, GPIOInit, NULL, -1, "GPIO Task")

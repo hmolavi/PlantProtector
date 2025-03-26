@@ -29,7 +29,7 @@
  */
 typedef enum {
 #define THERMISTOR(name, adc, t0, rt0, b, r, vmin, vmax) THERMISTOR_##name,
-#include "../thermistor.inc"
+#include "thermistor.inc"
     THERMISTOR_MAX
 } ThermistorChannel_t;
 

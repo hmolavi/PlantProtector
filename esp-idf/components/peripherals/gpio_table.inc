@@ -18,6 +18,22 @@
 #define PIN(name, bit_index, type, mode, pull_up, pull_down, str, sig_idx, func_idx, output_enable_inv, software_inv, default, desc)
 #endif
 
+/** PIN Definition
+ * - name: The name of the GPIO pin.
+ * - bit_index: The bit index of the GPIO pin.
+ * - type: The type of the GPIO pin (e.g., input, output).
+ * - mode: The mode of the GPIO pin (e.g., input, output, open-drain).
+ * - pu: Pull-up configuration (enabled or disabled).
+ * - pd: Pull-down configuration (enabled or disabled).
+ * - str: Drive strength of the GPIO pin.
+ * - sig_idx: Signal index associated with the GPIO pin.
+ * - func_idx: Function index associated with the GPIO pin.
+ * - oen_inv: Output enable inversion.
+ * - inv: Inversion configuration.
+ * - def: Default state of the GPIO pin.
+ * - desc: Description of the GPIO pin.
+ */
+
 /* SPI Connections */
 PIN(SPI_MOSI, 1, IOMUX, OUTPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "RTC Interface")
 PIN(SPI_MISO, 2, IOMUX, INPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "RTC Interface")
@@ -25,7 +41,7 @@ PIN(SPI_CE, 13, GPIO, OUTPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "RTC Chip e
 PIN(SPI_CLK, 14, IOMUX, OUTPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "RTC Interface")
 
 /* Analog Thermistors */
-PIN(THERM_SENS_AMB, 9, RTC, INPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "Thermal Sensor Ambient")
+PIN(THERM_SENS_AMB, 3, RTC, INPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "Thermal Sensor Ambient")
 PIN(THERM_SENS_SOI, 15, RTC, INPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "Thermal Sensor In Soil")
 PIN(MOIST_SENS_AMB, 17, RTC, INPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "Moisture Sensor Ambient")
 PIN(MOIST_SENS_SOI, 6, RTC, INPUT, DISABLE, DISABLE, 0, 0, 0, 0, TRUE, 0, "Moisture Sensor In Soil")

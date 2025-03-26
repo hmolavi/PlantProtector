@@ -29,7 +29,7 @@
 typedef enum GPIOPins_e {
 #define PIN(name, bit_index, type, mode, pu, pd, str, sig_idx, func_idx, oen_inv, inv, default, desc) \
     PIN_##name,
-#include "../gpio_table.inc"
+#include "gpio_table.inc"
     MAX_GPIO_PINS,
 } GPIOPins_t;
 
@@ -40,12 +40,12 @@ typedef enum GPIOPins_e {
  * This is achieved by defining a fake pin for each bit index in the GPIO
  * table.
  *
- * The pin number should be unique and should not have leading zeros.
+ * The pin numbers should be unique and should not have leading zeros.
  */
 typedef enum GPIOPinsDuplicates_e {
 #define PIN(name, bit_index, type, mode, pu, pd, str, sig_idx, func_idx, oen_inv, inv, default, desc) \
     DUPLICATE_PIN_##bit_index,
-#include "../gpio_table.inc"
+#include "gpio_table.inc"
 } GPIOPinsDuplicates_t;
 
 /**

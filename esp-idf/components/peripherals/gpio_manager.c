@@ -13,7 +13,7 @@
  * @copyright Copyright (c) 2025
  */
 
-#include "include/gpio_manager.h"
+#include "gpio_manager.h"
 
 #include <stdint.h>
 #include <stdio.h>

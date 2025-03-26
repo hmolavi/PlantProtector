@@ -7,12 +7,12 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#include "include/parser.h"
+#include "parser.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "../../components/parameters/include/param_manager.h"
+#include "param_manager.h"
 
 void strip_quotes(char* str)
 {

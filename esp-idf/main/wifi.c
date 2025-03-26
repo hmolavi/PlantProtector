@@ -7,7 +7,7 @@
 ///@copyright Copyright (c) 2025
 ///
 
-#include "include/wifi.h"
+#include "wifi.h"
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -17,12 +17,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "../components/parameters/include/param_manager.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "param_manager.h"
 
 #define MAX_RETRIES 2
 

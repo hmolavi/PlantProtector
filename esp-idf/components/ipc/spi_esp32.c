@@ -40,106 +40,6 @@
 #define DATA_START_INDEX 2
 #define CRC_START_INDEX 30
 
-/**
- * @brief Calculate the parity for a given parity bit position.
- *
- * This function calculates the parity for a specified parity bit position
- * in the data array. The parity bit position is determined by the index p.
- *
- * @param n The total number of bits in the encoded data.
- * @param data Pointer to the array containing the data bits.
- * @param p The index of the parity check (0 for P1, 1 for P2, etc.).
- * @return The calculated parity (0 or 1).
- */
-int parity_check(int n, int *data, int p)
-{
-    int mask = 1 << p;  // 1-based position of the parity bit (2^p)
-    int sum = 0;
-    // Iterate over all bits starting from the current parity bit's position
-    for (int i = mask - 1; i < n; i++) {
-        // Check if the (i+1)-th bit has the p-th bit set (1-based position)
-        if (((i + 1) & mask) != 0) {
-            sum ^= data[i];
-        }
-    }
-    return sum;
-}
-
-/**
- * @brief Encode data using Hamming code.
- *
- * This function encodes the given data using Hamming code, which includes
- * calculating and setting the necessary parity bits. The encoded data is
- * stored in the provided encoded_data array.
- *
- * - Dependant on parity_check()
- *
- * @param data Pointer to the array containing the data bits to be encoded.
- * @param data_bits The number of data bits in the input array.
- * @param encoded_data Pointer to the array where the encoded data will be stored.
- */
-void hamming_encode(int *data, int data_bits, int *encoded_data)
-{
-    // Calculate the required number of parity bits (r)
-    int r = 0;
-    while ((1 << r) < (data_bits + r + 1)) {
-        r++;
-    }
-    int n = data_bits + r;
-
-    // Initialize encoded data to 0
-    for (int i = 0; i < n; i++) {
-        encoded_data[i] = 0;
-    }
-
-    // Place data bits in non-parity positions
-    int j = 0;
-    for (int i = 0; i < n; i++) {
-        // Check if current position is a parity bit position (i+1 is a power of 2)
-        if ((i & (i + 1)) == 0) {
-            continue;  // Skip parity positions
-        }
-        if (j < data_bits) {  // Ensure we don't exceed data array bounds
-            encoded_data[i] = data[j];
-            j++;
-        }
-    }
-
-    // Calculate and set the parity bits
-    for (int p = 0; p < r; p++) {
-        int parity_pos = (1 << p) - 1;  // 0-based index
-        if (parity_pos < n) {           // Ensure parity position is within bounds
-            encoded_data[parity_pos] = parity_check(n, encoded_data, p);
-        }
-    }
-}
-
-/**
- * @brief Computes the CRC-16-CCITT checksum for the given data.
- *
- * This function calculates the CRC-16-CCITT checksum for a given array of data
- * using the polynomial 0x1021. The initial value of the CRC is set to 0xFFFF.
- *
- * @param data Pointer to the data array for which the CRC is to be computed.
- * @param len Length of the data array.
- * @return The computed CRC-16-CCITT checksum.
- */
-uint16_t compute_crc(const uint8_t *data, size_t len)
-{
-    uint16_t crc = 0xFFFF;
-    for (size_t i = 0; i < len; i++) {
-        crc ^= (uint16_t)data[i] << 8;
-        for (int j = 0; j < 8; j++) {
-            if (crc & 0x8000) {
-                crc = (crc << 1) ^ 0x1021;
-            }
-            else {
-                crc <<= 1;
-            }
-        }
-    }
-    return crc;
-}
 
 /**
  * @brief Sends a message over SPI with CRC and Hamming encoding.
@@ -227,25 +127,6 @@ void send_spi_message(uint8_t header, const uint8_t *data, size_t data_len)
     free(encoded_message);
 }
 
-/**
- * @brief Convert an array of bits to an array of bytes.
- *        Used to encode messages from the sender
- *
- * This function takes an array of bits and converts it into an array of bytes.
- * Each byte in the output array will represent 8 bits from the input array.
- *
- * @param bits Pointer to the input array of bits.
- * @param num_bits The number of bits in the input array.
- * @param bytes Pointer to the output array of bytes. The size of this array
- *              should be at least (num_bits + 7) / 8 bytes.
- */
-void bits_to_bytes(const int *bits, size_t num_bits, uint8_t *bytes)
-{
-    memset(bytes, 0, (num_bits + 7) / 8);
-    for (size_t i = 0; i < num_bits; i++) {
-        if (bits[i]) bytes[i / 8] |= (1 << (7 - (i % 8)));
-    }
-}
 
 void setup()
 {

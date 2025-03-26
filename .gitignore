@@ -1,6 +1,6 @@
-sdkconfig
-sdkconfig.old
-build/
-dependencies.lock
 .vscode/
-main/private.h
+esp-idf/sdkconfig
+esp-idf/build/
+esp-idf/dependencies.lock
+esp-idf/main/private.h
+esp-idf/sdkconfig.old
