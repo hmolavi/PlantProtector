@@ -19,9 +19,16 @@
  * @copyright Copyright (c) 2025
  */
 
+#ifndef __HAMMING_H__
+#define __HAMMING_H__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Calculate the even-parity for a given parity bit position.
@@ -90,4 +97,8 @@ int calculate_syndrome(int n, int *encoded_data);
  */
 void hamming_decode(int *encoded_data, int n, int *decoded_data);
 
-void print_array(int *arr, int n, const char *label);
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // __HAMMING_H__

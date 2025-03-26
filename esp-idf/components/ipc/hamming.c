@@ -18,6 +18,8 @@
  * @copyright Copyright (c) 2025
  */
 
+#include "hamming.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,7 +118,6 @@ void hamming_decode(int *encoded_data, int n, int *decoded_data)
     }
 
     // Extract data bits
-    int data_bits = n - r;
     int decoded_index = 0;
     for (int i = 0; i < n; i++) {
         // Check if the current position is a data bit and not a parity position
@@ -128,6 +129,8 @@ void hamming_decode(int *encoded_data, int n, int *decoded_data)
 
 /*-----------------------------------------------------------*/
 
+/* Tests used to verify hamming code implementation. Ignore lol
+
 void print_array(int *arr, int n, const char *label)
 {
     printf("%s: ", label);
@@ -136,8 +139,6 @@ void print_array(int *arr, int n, const char *label)
     }
     printf("\n");
 }
-
-/* Tests used to verify hamming code implementation. Ignore lol
 
 void test_all_combinations()
 {
