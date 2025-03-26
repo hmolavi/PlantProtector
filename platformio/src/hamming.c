@@ -1,5 +1,5 @@
 /**
- * @file hamming.ino
+ * @file hamming.c
  * @author Hossein Molavi (hmolavi@uwaterloo.ca)
  *
  * @brief Implementation of Hamming Code for error detection and correction.
@@ -12,7 +12,7 @@
  *  This code was specifically designed for use and integration of
  *  Hamming(7,4) and calculates the required number of parity bits.
  *
- * @version 1.0
+ * @version 1.1
  * @date 2025-03-08
  *
  * @copyright Copyright (c) 2025
@@ -126,3 +126,110 @@ void hamming_decode(int *encoded_data, int n, int *decoded_data)
         }
     }
 }
+
+/*-----------------------------------------------------------*/
+
+/* Tests used to verify hamming code implementation. Ignore lol
+
+static void print_array(int *arr, int n, const char *label)
+{
+    printf("%s: ", label);
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+void test_all_combinations()
+{
+    int total_tests = 0;
+    int passed_tests = 0;
+    const int data_bits = 4;
+
+    printf("=== Starting Comprehensive Hamming Code Test ===\n");
+
+    // Test all 16 possible 4-bit data patterns
+    for (int pattern = 0; pattern < 16; pattern++) {
+        // Convert pattern number to binary array (MSB first)
+        int data[4];
+        for (int i = 0; i < 4; i++) {
+            data[i] = (pattern >> (3 - i)) & 1;
+        }
+
+        // Calculate required parameters
+        int n = 7;  // 4 data bits + 3 parity bits
+        int encoded_data[n];
+        hamming_encode(data, data_bits, encoded_data);
+
+        // Test every possible single-bit error position
+        for (int error_pos = 0; error_pos < n; error_pos++) {
+            total_tests++;
+
+            // Create modified copy with single-bit error
+            int modified[n];
+            memcpy(modified, encoded_data, sizeof(int) * n);
+            modified[error_pos] ^= 1;
+
+            // Decode the modified data
+            int decoded[data_bits];
+            hamming_decode(modified, n, decoded);
+
+            // Verify results
+            int match = 1;
+            for (int i = 0; i < data_bits; i++) {
+                if (decoded[i] != data[i]) {
+                    match = 0;
+                    break;
+                }
+            }
+
+            if (match) {
+                passed_tests++;
+            }
+            else {
+                printf("\nTest failed!\n");
+                printf("Original data: ");
+                for (int i = 0; i < data_bits; i++) printf("%d ", data[i]);
+                printf("\nError injected at position: %d", error_pos);
+                printf("\nDecoded result: ");
+                for (int i = 0; i < data_bits; i++) printf("%d ", decoded[i]);
+                printf("\n");
+            }
+        }
+    }
+
+    printf("\n=== Test Results ===\n");
+    printf("Total test cases: %d\n", total_tests);
+    printf("Successful corrections: %d\n", passed_tests);
+    printf("Failure rate: %.2f%%\n",
+           (total_tests - passed_tests) * 100.0 / total_tests);
+}
+
+int main()
+{
+    // Run single demonstration test
+    int demo_data[] = {1, 1, 1, 0};
+    int demo_bit_to_change = 1;
+    int data_bits = sizeof(demo_data) / sizeof(demo_data[0]);
+    int parity_bits = 0;
+    while ((1 << parity_bits) < (data_bits + parity_bits + 1)) parity_bits++;
+    int n = data_bits + parity_bits;
+
+    int encoded[n], decoded[data_bits];
+
+    printf("=== Demonstration Test ===\n");
+    hamming_encode(demo_data, data_bits, encoded);
+    print_array(encoded, n, "Encoded Data");
+
+    encoded[demo_bit_to_change] ^= 1;
+    print_array(encoded, n, "With Error  ");
+
+    hamming_decode(encoded, n, decoded);
+    print_array(decoded, data_bits, "Decoded Data");
+
+    // Run comprehensive tests
+    test_all_combinations();
+
+    return 0;
+}
+*/

@@ -13,7 +13,7 @@
  *  Hamming(7,4) and calculates the required number of parity bits.
  *
  *
- * @version 1.0
+ * @version 1.1
  * @date 2025-03-08
  *
  * @copyright Copyright (c) 2025

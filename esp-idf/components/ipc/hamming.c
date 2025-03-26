@@ -12,7 +12,7 @@
  *  This code was specifically designed for use and integration of
  *  Hamming(7,4) and calculates the required number of parity bits.
  *
- * @version 1.0
+ * @version 1.1
  * @date 2025-03-08
  *
  * @copyright Copyright (c) 2025
@@ -131,7 +131,7 @@ void hamming_decode(int *encoded_data, int n, int *decoded_data)
 
 /* Tests used to verify hamming code implementation. Ignore lol
 
-void print_array(int *arr, int n, const char *label)
+static void print_array(int *arr, int n, const char *label)
 {
     printf("%s: ", label);
     for (int i = 0; i < n; i++) {
