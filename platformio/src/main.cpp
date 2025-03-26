@@ -99,9 +99,9 @@ void setup() {
   }
   Serial.println("card initialized.");
 
-  writeToCard();
+  // writeToCard();
 
-  readFromCard();
+  // readFromCard();
 
   delay(200);
   tmElements_t tm;
@@ -120,6 +120,7 @@ void setup() {
     Serial.println("Failed to set RTC. Check wiring.");
   }
 
+  Serial.println("===Run single demonstration test===");
   // Run single demonstration test
   int demo_data[] = {1, 1, 1, 0};
   int demo_bit_to_change = 1;
@@ -130,7 +131,7 @@ void setup() {
 
   int encoded[n], decoded[data_bits];
 
-  printf("=== Demonstration Test ===\n");
+  Serial.println("=== Demonstration Test ===");
   hamming_encode(demo_data, data_bits, encoded);
   print_array(encoded, n, "Encoded Data");
 
@@ -139,6 +140,8 @@ void setup() {
 
   hamming_decode(encoded, n, decoded);
   print_array(decoded, data_bits, "Decoded Data");
+
+  Serial.println("===End of demonstration test===");
 }
 
 void loop() {
