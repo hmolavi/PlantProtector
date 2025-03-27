@@ -51,7 +51,7 @@ typedef enum SPICommands_e {
 #undef COMM_CMD
 
 /* Error Codes */
-typedef enum {
+typedef enum CommError_e{
     COMM_SUCCESS = 0,
     COMM_INVALID_PARAM,
     COMM_ENCODING_ERROR,
@@ -71,7 +71,7 @@ int Comm_Printf(const char *fmt, ...);
 
 int Comm_Log(const char *fmt, ...);
 
-int Comm_ExecuteCommand(SPICommands_t action, char *data);
+CommError_t Comm_ExecuteCommand(SPICommands_t action, char *data);
 
 /**
  * @brief Computes the CRC-16-CCITT checksum for the given data.

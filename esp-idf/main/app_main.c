@@ -92,7 +92,7 @@ void app_main(void)
         return;
     }
 
-    Comm_ExecuteCommand(COMM_RTC_Read, NULL);
+    CommError_t a = Comm_ExecuteCommand(COMM_RTC_Read, NULL);
 
     /* Update wifi name and password */
     const char *ssid = Param_GetSsid(NULL);
