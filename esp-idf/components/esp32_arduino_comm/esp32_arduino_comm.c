@@ -17,10 +17,10 @@ typedef struct {
     const char *name;
     uint16_t code;
     const char *description;
-} IPCCommandInfo_t;
+} SPICommandInfo_t;
 
 #define COMM_CMD(name, code, desc) {#name, code, desc},
-static const IPCCommandInfo_t CommDescriptor[] = {
+static const SPICommandInfo_t CommDescriptor[] = {
 #include "comm_commands.inc"
     {NULL, 0, NULL}  // MaxCommCmd
 };
@@ -39,7 +39,7 @@ int CommManager_Init(void)
 #define COMM_GPIO_WRITE(pin, val) digitalWrite(pin, val)
 #define COMM_SPI_BEGIN() SPI.begin()
 #define COMM_DELAY(ms) delay(ms)
-#else // elif defined(ESP_IDF)
+#else  // elif defined(ESP_IDF)
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #define HIGH 1
@@ -60,7 +60,7 @@ static CommError_t spi_transfer(uint8_t *tx_data, uint8_t *rx_data, size_t len)
     SPI.transfer(tx_data, len);
     if (rx_data) SPI.transfer(rx_data, len);
     return COMM_SUCCESS;
-#else // elif defined(ESP_IDF)
+#else  // elif defined(ESP_IDF)
     spi_transaction_t trans = {
         .length = len * 8,
         .tx_buffer = tx_data,
@@ -69,7 +69,7 @@ static CommError_t spi_transfer(uint8_t *tx_data, uint8_t *rx_data, size_t len)
 #endif
 }
 
-CommError_t Comm_ExecuteCommand(IPCCommands_t action, const char *data)
+CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
 {
     /* Parameter Validation */
     if (action >= MaxCommCmd) {

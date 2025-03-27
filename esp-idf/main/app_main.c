@@ -18,23 +18,24 @@
 
 /* Components */
 #include "adc_manager.h"
+#include "esp32_arduino_comm.h"
 #include "gpio_manager.h"
 #include "param_manager.h"
 
 /* Other tings */
-#include "thermistor.h"
+#include "ascii_art.h"
+#include "commands_registration.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
-#include "ascii_art.h"
-#include "commands_registration.h"
-#include "wifi.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "private.h"  // Holds the wifi ssid and password
+#include "thermistor.h"
+#include "wifi.h"
 
 static const char *TAG = "app_main.c";
 
@@ -59,7 +60,7 @@ void wifi_task(void *arg)
         esp_err_t ret;
 
         ret = ADC_Update();
-        if(ret == ESP_OK) {
+        if (ret == ESP_OK) {
             Thermistor_Print();
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -72,7 +73,7 @@ void app_main(void)
 
     PrintAsciiArt();
 
-    /* Initialize Components */ 
+    /* Initialize Components */
     esp_err_t ret;
 
     ret = ParamManager_Init();
@@ -90,6 +91,8 @@ void app_main(void)
         ESP_LOGE(TAG, "Failed to init ADC");
         return;
     }
+
+    Comm_ExecuteCommand(COMM_RTC_Read, NULL);
 
     /* Update wifi name and password */
     const char *ssid = Param_GetSsid(NULL);

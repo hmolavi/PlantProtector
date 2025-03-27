@@ -37,28 +37,7 @@ uint8_t expectedSeq = 0;
 uint8_t decodedBuffer[255];  // max expected message size
 size_t decodedPos = 0;
 
-/**
- * @brief Handles the received chunk of data over SPI.
- *
- * This function performs the following steps:
- * 1. Decode the hamming code.
- * 2. Verifies the CRC of the received chunk.
- * 2. Converts the encoded data to bits.
- * 3. Decodes each 7-bit segment using Hamming code.
- * 4. Converts the decoded bits back to bytes.
- * 5. Stores the decoded data in a buffer.
- * 6. Sends an ACK or NACK response over SPI.
- * 7. Processes the final chunk if it is the last one.
- *
- * The function expects the received chunk to be in the global variable `receivedChunk`.
- * The decoded data is stored in the global buffer `decodedBuffer`.
- * The function uses the global variables `expectedSeq`, `decodedPos`, and `total_chunks`
- * to manage the sequence and position of the data.
- *
- * @note This function assumes that the received chunk is 32 bytes long, with the last
- * two bytes being the CRC.
- */
-void handleReceivedChunk()
+void handleReceivedChunk_old()
 {
     // Verify chunk CRC
     uint16_t received_crc = (receivedChunk[30] << 8) | receivedChunk[31];
@@ -113,22 +92,23 @@ void handleReceivedChunk()
     }
 }
 
-/**
- * @brief Convert an array of bytes to an array of bits.
- *        Used to decode messages on the receiving end
- *
- * This function takes an array of bytes and converts each byte into its
- * corresponding bits, storing the result in an array of integers.
- *
- * @param bytes Pointer to the array of bytes to be converted.
- * @param num_bytes The number of bytes in the input array.
- * @param bits Pointer to the array of integers where the resulting bits will be stored.
- *             The array should be large enough to hold num_bytes * 8 elements.
- */
-void bytes_to_bits(const uint8_t *bytes, size_t num_bytes, int *bits)
+void handleReceivedChunk() 
 {
-    for (size_t i = 0; i < num_bytes * 8; i++) {
-        bits[i] = (bytes[i / 8] >> (7 - (i % 8))) & 1;
+    uint8_t response_encoded[CHUNK_ENCODED_SIZE];
+    Chunk_t chunk;
+
+    /* Decode and process */
+    if (decode_chunk(response_encoded, &chunk) == EXIT_SUCCESS) {
+        SPI.transfer(COMM_ACK);
+        // Null-terminate and print data
+        char received_data[DATA_LENGTH + 1];
+        memcpy(received_data, chunk.data, DATA_LENGTH);
+        received_data[DATA_LENGTH] = '\0';
+        Comm_Printf(received_data);
+    }
+    else {
+        SPI.transfer(COMM_NACK);
+        Comm_Printf("CRC Error in received data\n");
     }
 }
 

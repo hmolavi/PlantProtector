@@ -22,14 +22,13 @@ extern "C" {
 #define CHUNK_SIZE 32
 #define SIZE_CRC 2
 /* Encoded size calculated based off Hamming(7,4) */
-#define CHUNK_ENCODED_SIZE (CHUNK_SIZE*7)/4
+#define CHUNK_ENCODED_SIZE (CHUNK_SIZE * 7) / 4
 
 /* Ports */
 #define SPI_SCK 18
 #define SPI_MISO 19
 #define SPI_MOSI 23
 #define SPI_SS 5
-
 
 /** Data chunk
  *
@@ -45,11 +44,21 @@ typedef struct Chunk_s {
 
 /* Communication commands */
 #define COMM_CMD(name, code, desc) COMM_##name,
-typedef enum IPCCommands_e {
+typedef enum SPICommands_e {
 #include "comm_commands.inc"
     MaxCommCmd
-} IPCCommands_t;
+} SPICommands_t;
 #undef COMM_CMD
+
+/* Error Codes */
+typedef enum {
+    COMM_SUCCESS = 0,
+    COMM_INVALID_PARAM,
+    COMM_ENCODING_ERROR,
+    COMM_CRC_ERROR,
+    COMM_TIMEOUT,
+    COMM_SPI_ERROR
+} CommError_t;
 
 // typedef enum CommMode_e {
 //     MASTER,
@@ -62,7 +71,7 @@ int Comm_Printf(const char *fmt, ...);
 
 int Comm_Log(const char *fmt, ...);
 
-int Comm_ExecuteCommand(IPCCommands_t action, char *data);
+int Comm_ExecuteCommand(SPICommands_t action, char *data);
 
 /**
  * @brief Computes the CRC-16-CCITT checksum for the given data.

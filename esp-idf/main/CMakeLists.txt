@@ -16,6 +16,8 @@ idf_component_register(
                         ../components/parameters/include
                         ../components/peripherals
                         ../components/peripherals/include
+                        ../components/esp32_arduino_comm
+                        ../components/esp32_arduino_comm/include
                     REQUIRES 
 						console 
 						nvs_flash 
