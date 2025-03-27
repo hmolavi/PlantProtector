@@ -1,6 +1,7 @@
 idf_component_register(
                     SRCS 
-                        ipc.c
+                        esp32_arduino_comm.c
+                        hamming.c
                     INCLUDE_DIRS 
                         .
                         ./include
