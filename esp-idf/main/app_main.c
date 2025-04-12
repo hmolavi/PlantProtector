@@ -39,6 +39,9 @@
 
 static const char *TAG = "app_main.c";
 
+#define DEBUG 1
+#define PARAM_TESTING 0
+
 void wifi_task(void *arg)
 {
     // Initialize wifi
@@ -57,12 +60,14 @@ void wifi_task(void *arg)
     Wifi_TryConnect();
 
     while (1) { /* Weeeeeee */
+        #if DEBUG == 0
         esp_err_t ret;
 
         ret = ADC_Update();
         if (ret == ESP_OK) {
             Thermistor_Print();
         }
+        #endif
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -92,9 +97,12 @@ void app_main(void)
         return;
     }
 
-    CommError_t a = Comm_ExecuteCommand(COMM_RTC_Read, NULL);
-    if (a) {
+    CommError_t a = CommManager_Init();
+
+    a = Comm_ExecuteCommand(COMM_RTC_Read, NULL);
+    if (a != COMM_SUCCESS) {
         printf("code is buns");
+        while(1) {vTaskDelay(pdMS_TO_TICKS(1000));}
     }
 
     /* Update wifi name and password */
@@ -116,7 +124,7 @@ void app_main(void)
 
     /////////////////////////////////////////////////
 
-#ifdef PARAM_TESTING
+#if PARAM_TESTING == 1
     printf("Brightness upon wake: %d\n", Param_GetBrightness());
 
     // Set parameter with type safety
