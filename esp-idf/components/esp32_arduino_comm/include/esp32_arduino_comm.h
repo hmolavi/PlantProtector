@@ -22,11 +22,15 @@ extern "C" {
 /* Encoded size calculated based off Hamming(7,4) */
 #define CHUNK_ENCODED_SIZE (CHUNK_SIZE * 7) / 4
 
-/* Ports */
-#define ESP32_SCK 36
-#define ESP32_MISO 37
-#define ESP32_MOSI 35
-#define ESP32_SS 45
+/* SPI Ports */
+#ifdef ARDUINO
+#define SPI_SS 10
+#else 
+#define SPI_SCK 36
+#define SPI_MISO 37
+#define SPI_MOSI 35
+#define SPI_SS 45
+#endif
 
 /** Data chunk
  *
@@ -49,7 +53,7 @@ typedef enum SPICommands_e {
 #undef COMM_CMD
 
 /* Error Codes */
-typedef enum CommError_e{
+typedef enum CommError_e {
     COMM_SUCCESS = 0,
     COMM_INVALID_PARAM,
     COMM_ENCODING_ERROR,
@@ -58,10 +62,6 @@ typedef enum CommError_e{
     COMM_SPI_ERROR
 } CommError_t;
 
-// typedef enum CommMode_e {
-//     MASTER,
-//     SLAVE
-// } CommMode_t
 int CommManager_Init(void);
 
 /* Printf style output to the approperiate console */
@@ -69,13 +69,13 @@ int Comm_Printf(const char *fmt, ...);
 
 int Comm_Log(const char *fmt, ...);
 
-#ifndef ARDUINO
-CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data);
-#endif
-
 int encode_chunk(Chunk_t chunk, uint8_t *encoded_chunk);
 
 int decode_chunk(uint8_t *encoded_chunk, Chunk_t *decoded_chunk);
+
+#ifndef ARDUINO
+CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data);
+#endif
 
 #ifdef __cplusplus
 }

@@ -82,9 +82,9 @@ int CommManager_Init(void)
     return EXIT_SUCCESS;
 #else  // ESP_IDF
     spi_bus_config_t buscfg = {
-        .mosi_io_num = ESP32_MOSI,
-        .miso_io_num = ESP32_MISO,
-        .sclk_io_num = ESP32_SCK,
+        .mosi_io_num = SPI_MOSI,
+        .miso_io_num = SPI_MISO,
+        .sclk_io_num = SPI_SCK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
         .max_transfer_sz = CHUNK_ENCODED_SIZE};
@@ -92,7 +92,7 @@ int CommManager_Init(void)
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = 1000000,  // 1 MHz
         .mode = 0,                  // SPI mode 0
-        .spics_io_num = ESP32_SS,
+        .spics_io_num = SPI_SS,
         .queue_size = 1,
     };
 
@@ -175,9 +175,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
 
     do {
         /* Send encoded chunk */
-        COMM_GPIO_WRITE(ESP32_SS, LOW);
+        COMM_GPIO_WRITE(SPI_SS, LOW);
         ret = spi_transfer(encoded_chunk, NULL, CHUNK_ENCODED_SIZE);
-        COMM_GPIO_WRITE(ESP32_SS, HIGH);
+        COMM_GPIO_WRITE(SPI_SS, HIGH);
 
         if (ret != COMM_SUCCESS) {
             Comm_Log("SPI transfer error: %d", ret);
@@ -185,9 +185,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
         }
 
         /* Wait for ACK */
-        COMM_GPIO_WRITE(ESP32_SS, LOW);
+        COMM_GPIO_WRITE(SPI_SS, LOW);
         ret = spi_transfer(&ack_byte, &ack, 1);
-        COMM_GPIO_WRITE(ESP32_SS, HIGH);
+        COMM_GPIO_WRITE(SPI_SS, HIGH);
 
     } while (ack != ACK_CODE && GET_TIME_MS < timeout);
 
@@ -210,9 +210,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
             /* Receive Response */
             uint32_t start = GET_TIME_MS;
             while ((GET_TIME_MS - start) < COMM_TIMEOUT_MS) {
-                COMM_GPIO_WRITE(ESP32_SS, LOW);
+                COMM_GPIO_WRITE(SPI_SS, LOW);
                 ret = spi_transfer(NULL, response_encoded, CHUNK_ENCODED_SIZE);
-                COMM_GPIO_WRITE(ESP32_SS, HIGH);
+                COMM_GPIO_WRITE(SPI_SS, HIGH);
 
                 if (ret == COMM_SUCCESS) break;
                 COMM_DELAY(COMM_RESPONSE_POLL_INTERVAL_MS);
@@ -230,9 +230,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
             }
 
             /* Send NACK */
-            COMM_GPIO_WRITE(ESP32_SS, LOW);
+            COMM_GPIO_WRITE(SPI_SS, LOW);
             spi_transfer(&nack_byte, NULL, 1);
-            COMM_GPIO_WRITE(ESP32_SS, HIGH);
+            COMM_GPIO_WRITE(SPI_SS, HIGH);
 
         } while (retries-- > 0);
 
@@ -247,9 +247,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
         Comm_Printf("Received: %s", received_data);
 
         /* Send final ACK */
-        COMM_GPIO_WRITE(ESP32_SS, LOW);
+        COMM_GPIO_WRITE(SPI_SS, LOW);
         spi_transfer(&ack_byte, NULL, 1);
-        COMM_GPIO_WRITE(ESP32_SS, HIGH);
+        COMM_GPIO_WRITE(SPI_SS, HIGH);
     }
 
     return COMM_SUCCESS;
