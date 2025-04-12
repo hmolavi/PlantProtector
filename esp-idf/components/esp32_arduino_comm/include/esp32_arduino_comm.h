@@ -69,7 +69,9 @@ int Comm_Printf(const char *fmt, ...);
 
 int Comm_Log(const char *fmt, ...);
 
+#ifndef ARDUINO
 CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data);
+#endif
 
 int encode_chunk(Chunk_t chunk, uint8_t *encoded_chunk);
 

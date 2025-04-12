@@ -41,6 +41,7 @@ static const SPICommandInfo_t CommDescriptor[] = {
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 static spi_device_handle_t spi_device;
 #define HIGH 1
@@ -114,6 +115,7 @@ int CommManager_Init(void)
 #endif
 }
 
+#ifndef ARDUINO
 CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
 {
     if (spi_device == NULL) {
@@ -252,6 +254,7 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
 
     return COMM_SUCCESS;
 }
+#endif
 
 /*-----------------------------------------------------------*/
 
