@@ -11,7 +11,6 @@ idf_component_register(
 						.
                         ./include
                         ../components/library
-                        ../components/library/include
                         ../components/parameters
                         ../components/parameters/include
                         ../components/peripherals
