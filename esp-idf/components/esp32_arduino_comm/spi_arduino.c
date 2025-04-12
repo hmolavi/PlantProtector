@@ -107,7 +107,10 @@ void handleReceivedChunk()
         memcpy(received_data, chunk.data, DATA_LENGTH);
         received_data[DATA_LENGTH] = '\0';
 
-        // for now j print
+        // Print decoded chunk's header in hex
+        Comm_Printf("%02X \n", chunk.header);
+
+        // for now just print data
         Comm_Printf(received_data);
     }
     else {
