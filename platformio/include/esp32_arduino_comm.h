@@ -25,7 +25,7 @@ extern "C" {
 /* SPI Ports */
 #ifdef ARDUINO
 #define SPI_SS 10
-#else 
+#else
 #define SPI_SCK 36
 #define SPI_MISO 37
 #define SPI_MOSI 35
