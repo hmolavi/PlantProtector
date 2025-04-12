@@ -6,6 +6,8 @@
 
 #include "hamming.h"
 
+#define DEBUG 1
+
 const int chipSelect = 10;
 
 void print_array(int *arr, int n, const char *label)
@@ -93,15 +95,15 @@ void setup() {
   Serial.begin(9600);
   while (!Serial); // wait for Serial Monitor to open
 
+#if DEBUG == 0
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
     return;
   }
   Serial.println("card initialized.");
 
-  // writeToCard();
-
-  // readFromCard();
+  writeToCard();
+  readFromCard();
 
   delay(200);
   tmElements_t tm;
@@ -142,6 +144,7 @@ void setup() {
   print_array(decoded, data_bits, "Decoded Data");
 
   Serial.println("===End of demonstration test===");
+#endif
 }
 
 void loop() {

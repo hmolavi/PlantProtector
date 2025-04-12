@@ -202,7 +202,7 @@ void test_all_combinations()
     printf("Total test cases: %d\n", total_tests);
     printf("Successful corrections: %d\n", passed_tests);
     printf("Failure rate: %.2f%%\n",
-           (total_tests - passed_tests) * 100.0 / total_tests);
+        (total_tests - passed_tests) * 100.0 / total_tests);
 }
 
 int main()

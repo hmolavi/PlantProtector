@@ -2,22 +2,22 @@
  * @file hamming.h
  * @author Hossein Molavi (hmolavi@uwaterloo.ca)
 
- * @brief Implementation of Hamming Code for error detection and correction.
- *
- * This file contains functions to encode data using Hamming code, decode
- * encoded data, and detect and correct single-bit errors. It also includes
- * a comprehensive test function to validate the implementation.
- *
- * @note
- *  This code was specifically designed for use and integration of
- *  Hamming(7,4) and calculates the required number of parity bits.
- *
- *
- * @version 1.1
- * @date 2025-03-08
- *
- * @copyright Copyright (c) 2025
- */
+* @brief Implementation of Hamming Code for error detection and correction.
+*
+* This file contains functions to encode data using Hamming code, decode
+* encoded data, and detect and correct single-bit errors. It also includes
+* a comprehensive test function to validate the implementation.
+*
+* @note
+*  This code was specifically designed for use and integration of
+*  Hamming(7,4) and calculates the required number of parity bits.
+*
+*
+* @version 1.1
+* @date 2025-03-08
+*
+* @copyright Copyright (c) 2025
+*/
 
 #ifndef __HAMMING_H__
 #define __HAMMING_H__
