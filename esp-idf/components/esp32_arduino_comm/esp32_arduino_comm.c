@@ -1,4 +1,6 @@
-
+/** esp32_arduino_comm.c
+ *
+ */
 
 #include "esp32_arduino_comm.h"
 
@@ -26,11 +28,6 @@ static const SPICommandInfo_t CommDescriptor[] = {
 };
 #undef COMM_CMD
 
-int CommManager_Init(void)
-{
-    return EXIT_SUCCESS;
-}
-
 /*-----------------------------------------------------------*/
 
 /* Platform Abstraction Layer */
@@ -39,13 +36,18 @@ int CommManager_Init(void)
 #define COMM_GPIO_WRITE(pin, val) digitalWrite(pin, val)
 #define COMM_SPI_BEGIN() SPI.begin()
 #define COMM_DELAY(ms) delay(ms)
+#define GET_TIME_MS millis()
 #else  // elif defined(ESP_IDF)
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "esp_timer.h"
+#include "freertos/task.h"
+static spi_device_handle_t spi_device;
 #define HIGH 1
 #define LOW 0
 #define COMM_GPIO_WRITE(pin, val) gpio_set_level(pin, val)
 #define COMM_DELAY(ms) vTaskDelay(pdMS_TO_TICKS(ms))
+#define GET_TIME_MS esp_timer_get_time() / 1000
 #endif
 
 /* Common Defines */
@@ -61,6 +63,10 @@ static CommError_t spi_transfer(uint8_t *tx_data, uint8_t *rx_data, size_t len)
     if (rx_data) SPI.transfer(rx_data, len);
     return COMM_SUCCESS;
 #else  // elif defined(ESP_IDF)
+    if (spi_device == NULL) {
+        Comm_Log("SPI device handle is not initialized");
+        return COMM_SPI_ERROR;
+    }
     spi_transaction_t trans = {
         .length = len * 8,
         .tx_buffer = tx_data,
@@ -69,8 +75,52 @@ static CommError_t spi_transfer(uint8_t *tx_data, uint8_t *rx_data, size_t len)
 #endif
 }
 
+int CommManager_Init(void)
+{
+#ifdef ARDUINO
+    return EXIT_SUCCESS;
+#else  // ESP_IDF
+    spi_bus_config_t buscfg = {
+        .mosi_io_num = ESP32_MOSI,
+        .miso_io_num = ESP32_MISO,
+        .sclk_io_num = ESP32_SCK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = CHUNK_ENCODED_SIZE};
+
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = 1000000,  // 1 MHz
+        .mode = 0,                  // SPI mode 0
+        .spics_io_num = ESP32_SS,
+        .queue_size = 1,
+    };
+
+    esp_err_t ret;
+
+    /* HSPI (SPI2) and VSPI (SPI3) */
+    ret = spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    if (ret != ESP_OK) {
+        Comm_Log("Failed to initialize SPI bus: %d", ret);
+        return EXIT_FAILURE;
+    }
+
+    ret = spi_bus_add_device(SPI2_HOST, &devcfg, &spi_device);
+    if (ret != ESP_OK) {
+        Comm_Log("Failed to add SPI device: %d", ret);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+#endif
+}
+
 CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
 {
+    if (spi_device == NULL) {
+        Comm_Log("Comm_ExecuteCommand() Failed. SPI device handle is not initialized");
+        return COMM_SPI_ERROR;
+    }
+
     /* Parameter Validation */
     if (action >= MaxCommCmd) {
         Comm_Log("Invalid command");
@@ -116,14 +166,16 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
     /* SPI Transmission */
     CommError_t ret = COMM_SUCCESS;
     uint8_t ack;
-    uint32_t timeout = millis() + COMM_TIMEOUT_MS;
+    uint32_t timeout = GET_TIME_MS + COMM_TIMEOUT_MS;
     uint8_t ack_byte = ACK_CODE;
+
+    printf("Ight here we go\n");
 
     do {
         /* Send encoded chunk */
-        COMM_GPIO_WRITE(SPI_SS, LOW);
+        COMM_GPIO_WRITE(ESP32_SS, LOW);
         ret = spi_transfer(encoded_chunk, NULL, CHUNK_ENCODED_SIZE);
-        COMM_GPIO_WRITE(SPI_SS, HIGH);
+        COMM_GPIO_WRITE(ESP32_SS, HIGH);
 
         if (ret != COMM_SUCCESS) {
             Comm_Log("SPI transfer error: %d", ret);
@@ -131,11 +183,13 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
         }
 
         /* Wait for ACK */
-        COMM_GPIO_WRITE(SPI_SS, LOW);
+        COMM_GPIO_WRITE(ESP32_SS, LOW);
         ret = spi_transfer(&ack_byte, &ack, 1);
-        COMM_GPIO_WRITE(SPI_SS, HIGH);
+        COMM_GPIO_WRITE(ESP32_SS, HIGH);
 
-    } while (ack != ACK_CODE && millis() < timeout);
+    } while (ack != ACK_CODE && GET_TIME_MS < timeout);
+
+    printf("Fini\n");
 
     if (ack != ACK_CODE) {
         Comm_Log("No valid ACK received (0x%02X)", ack);
@@ -152,11 +206,11 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
 
         do {
             /* Receive Response */
-            uint32_t start = millis();
-            while ((millis() - start) < COMM_TIMEOUT_MS) {
-                COMM_GPIO_WRITE(SPI_SS, LOW);
+            uint32_t start = GET_TIME_MS;
+            while ((GET_TIME_MS - start) < COMM_TIMEOUT_MS) {
+                COMM_GPIO_WRITE(ESP32_SS, LOW);
                 ret = spi_transfer(NULL, response_encoded, CHUNK_ENCODED_SIZE);
-                COMM_GPIO_WRITE(SPI_SS, HIGH);
+                COMM_GPIO_WRITE(ESP32_SS, HIGH);
 
                 if (ret == COMM_SUCCESS) break;
                 COMM_DELAY(COMM_RESPONSE_POLL_INTERVAL_MS);
@@ -174,9 +228,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
             }
 
             /* Send NACK */
-            COMM_GPIO_WRITE(SPI_SS, LOW);
+            COMM_GPIO_WRITE(ESP32_SS, LOW);
             spi_transfer(&nack_byte, NULL, 1);
-            COMM_GPIO_WRITE(SPI_SS, HIGH);
+            COMM_GPIO_WRITE(ESP32_SS, HIGH);
 
         } while (retries-- > 0);
 
@@ -191,9 +245,9 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
         Comm_Printf("Received: %s", received_data);
 
         /* Send final ACK */
-        COMM_GPIO_WRITE(SPI_SS, LOW);
+        COMM_GPIO_WRITE(ESP32_SS, LOW);
         spi_transfer(&ack_byte, NULL, 1);
-        COMM_GPIO_WRITE(SPI_SS, HIGH);
+        COMM_GPIO_WRITE(ESP32_SS, HIGH);
     }
 
     return COMM_SUCCESS;
@@ -214,6 +268,33 @@ static void bytes_to_bits(const uint8_t *bytes, size_t num_bytes, int *bits)
     for (size_t i = 0; i < num_bytes * 8; i++) {
         bits[i] = (bytes[i / 8] >> (7 - (i % 8))) & 1;
     }
+}
+
+/**
+ * @brief Computes the CRC-16-CCITT checksum for the given data.
+ *
+ * This function calculates the CRC-16-CCITT checksum for a given array of data
+ * using the polynomial 0x1021. The initial value of the CRC is set to 0xFFFF.
+ *
+ * @param data Pointer to the data array for which the CRC is to be computed.
+ * @param len Length of the data array.
+ * @return The computed CRC-16-CCITT checksum.
+ */
+static uint16_t compute_crc(const uint8_t *data, size_t len)
+{
+    uint16_t crc = 0xFFFF;
+    for (size_t i = 0; i < len; i++) {
+        crc ^= (uint16_t)data[i] << 8;
+        for (int j = 0; j < 8; j++) {
+            if (crc & 0x8000) {
+                crc = (crc << 1) ^ 0x1021;
+            }
+            else {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc;
 }
 
 /*-----------------------------------------------------------*/
@@ -264,25 +345,6 @@ int decode_chunk(uint8_t *encoded_chunk, Chunk_t *decoded_chunk)
 
 /*-----------------------------------------------------------*/
 
-uint16_t compute_crc(const uint8_t *data, size_t len)
-{
-    uint16_t crc = 0xFFFF;
-    for (size_t i = 0; i < len; i++) {
-        crc ^= (uint16_t)data[i] << 8;
-        for (int j = 0; j < 8; j++) {
-            if (crc & 0x8000) {
-                crc = (crc << 1) ^ 0x1021;
-            }
-            else {
-                crc <<= 1;
-            }
-        }
-    }
-    return crc;
-}
-
-/*-----------------------------------------------------------*/
-
 int Comm_Printf(const char *fmt, ...)
 {
     int rc;
@@ -292,7 +354,7 @@ int Comm_Printf(const char *fmt, ...)
     rc = vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
 
-#if ISTHISESP32 == 1
+#ifndef ARDUINO
     printf("%s", buf);
 #else
     Serial.print(buf);
@@ -312,7 +374,7 @@ int Comm_Log(const char *fmt, ...)
     rc = vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
 
-#if ISTHISESP32 == 1
+#ifndef ARDUINO
     printf("%s: %s\n", TAG, buf);
 #else
     Serial.print(TAG);

@@ -93,6 +93,9 @@ void app_main(void)
     }
 
     CommError_t a = Comm_ExecuteCommand(COMM_RTC_Read, NULL);
+    if (a) {
+        printf("code is buns");
+    }
 
     /* Update wifi name and password */
     const char *ssid = Param_GetSsid(NULL);

@@ -12,8 +12,6 @@
 extern "C" {
 #endif
 
-#define ISTHISESP32 1
-
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
@@ -25,10 +23,10 @@ extern "C" {
 #define CHUNK_ENCODED_SIZE (CHUNK_SIZE * 7) / 4
 
 /* Ports */
-#define SPI_SCK 18
-#define SPI_MISO 19
-#define SPI_MOSI 23
-#define SPI_SS 5
+#define ESP32_SCK 36
+#define ESP32_MISO 37
+#define ESP32_MOSI 35
+#define ESP32_SS 45
 
 /** Data chunk
  *
@@ -71,19 +69,7 @@ int Comm_Printf(const char *fmt, ...);
 
 int Comm_Log(const char *fmt, ...);
 
-CommError_t Comm_ExecuteCommand(SPICommands_t action, char *data);
-
-/**
- * @brief Computes the CRC-16-CCITT checksum for the given data.
- *
- * This function calculates the CRC-16-CCITT checksum for a given array of data
- * using the polynomial 0x1021. The initial value of the CRC is set to 0xFFFF.
- *
- * @param data Pointer to the data array for which the CRC is to be computed.
- * @param len Length of the data array.
- * @return The computed CRC-16-CCITT checksum.
- */
-uint16_t compute_crc(const uint8_t *data, size_t len);
+CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data);
 
 int encode_chunk(Chunk_t chunk, uint8_t *encoded_chunk);
 
