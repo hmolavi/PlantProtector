@@ -117,7 +117,7 @@ esp_err_t GPIO_Init(void)
     for (uint32_t i = 0; i < MAX_GPIO_PINS; i++) {
         pin = &GPIOPins[i];
         config = &pin->config;
-        ESP_LOGI(TAG, "Configuring %s:", pin->name);
+        ESP_LOGD(TAG, "Configuring %s: %d", pin->name, pin->index);
         gpio_config(config);
         if (config->mode & GPIO_MODE_OUTPUT) {
             /* Only set the drive strength if we are being an output */
@@ -251,4 +251,17 @@ uint32_t GPIO_FindPin(char *name)
         }
     }
     return MAX_GPIO_PINS;
+}
+
+/*-----------------------------------------------------------*/
+
+uint32_t GPIO_FindPinBitIndex(char *name)
+{
+    for (uint32_t i = 0; i < MAX_GPIO_PINS; i++) {
+        if ((GPIOPins[i].name != NULL) && (strcasecmp(name, GPIOPins[i].name) == 0)) {
+            return GPIOPins[i].index;
+        }
+    }
+    ESP_LOGE(TAG, "Pin with name %s not found", name);
+    return (uint32_t)-1;
 }

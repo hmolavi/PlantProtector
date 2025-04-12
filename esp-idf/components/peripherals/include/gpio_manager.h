@@ -105,4 +105,14 @@ void GPIO_PrintNames(void);
  */
 uint32_t GPIO_FindPin(char *name);
 
+/**
+ * @brief Find a pin index bit by name.
+ *
+ * This function searches for a pin by its name and returns its bit index.
+ *
+ * @param name The name of the pin to find.
+ * @return The index bit of the pin, or -1 if the pin is not found.
+ */
+uint32_t GPIO_FindPinBitIndex(char *name);
+
 #endif  // __GPIO_MANAGER_H__
