@@ -20,9 +20,11 @@
  * and that the total number of chunks is known.
  *
  */
-
+#ifdef ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
+
+#include "esp32_arduino_comm.h"
 
 #define CHUNK_SIZE 32
 #define DATA_PART_SIZE 28
@@ -32,7 +34,7 @@
 #define CRC_START_INDEX 30
 
 volatile bool chunkReceived = false;
-uint8_t receivedChunk[CHUNK_SIZE];
+uint8_t receivedChunk[CHUNK_ENCODED_SIZE];
 uint8_t expectedSeq = 0;
 uint8_t decodedBuffer[255];  // max expected message size
 size_t decodedPos = 0;
@@ -92,18 +94,20 @@ void handleReceivedChunk_old()
     }
 }
 
-void handleReceivedChunk() 
+void handleReceivedChunk()
 {
-    uint8_t response_encoded[CHUNK_ENCODED_SIZE];
     Chunk_t chunk;
 
     /* Decode and process */
-    if (decode_chunk(response_encoded, &chunk) == EXIT_SUCCESS) {
+    if (decode_chunk(receivedChunk, &chunk) == EXIT_SUCCESS) {
         SPI.transfer(COMM_ACK);
+
         // Null-terminate and print data
         char received_data[DATA_LENGTH + 1];
         memcpy(received_data, chunk.data, DATA_LENGTH);
         received_data[DATA_LENGTH] = '\0';
+
+        // for now j print
         Comm_Printf(received_data);
     }
     else {
@@ -121,15 +125,21 @@ void handleReceivedChunk()
  */
 void SPI_ISR()
 {
-    for (int i = 0; i < CHUNK_SIZE; i++) {
-        receivedChunk[i] = SPI.transfer(0x00);
+    // Static index to track the current position in the chunk
+    static uint8_t byteCount = 0;
+
+    receivedChunk[byteCount++] = SPDR;
+
+    if (byteCount >= CHUNK_SIZE) {
+        byteCount = 0;
+        chunkReceived = true;
     }
-    chunkReceived = true;
 }
 
 void setup()
 {
-    SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+    SPI.begin();             // Initialize SPI in slave mode
+    pinMode(SPI_SS, INPUT);  // Set MISO as output for SPI slave
     SPCR |= _BV(SPE);
     SPI.attachInterrupt();
 }
@@ -137,7 +147,9 @@ void setup()
 void loop()
 {
     if (chunkReceived) {
+        Serial.println("HAHA");
         chunkReceived = false;
         handleReceivedChunk();
     }
 }
+#endif
