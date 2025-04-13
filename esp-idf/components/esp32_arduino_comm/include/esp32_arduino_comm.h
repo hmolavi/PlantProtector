@@ -1,5 +1,19 @@
-/** esp32_arduino_comm.h
+/**
+ * @file esp32_arduino_comm.h
+ * @author Hossein Molavi (hmolavi@uwaterloo.ca)
  *
+ * @brief Communication interface between ESP32 and Arduino systems.
+ *
+ * This header file defines the structures, macros, and functions for interfacing
+ * an ESP32 with Arduino components via SPI communication. It includes data chunk
+ * definitions, error codes, and functions for encoding and decoding data with
+ * Hamming(7,4) error correction.
+ *
+ *
+ * @version 1.0
+ * @date 2024-04-13
+ *
+ * @copyright Copyright (c) 2023
  */
 
 #ifndef __ESP32_ARDUINO_COMM_H__

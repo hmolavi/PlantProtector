@@ -1,5 +1,18 @@
-/** esp32_arduino_comm.c
+/**
+ * @file esp32_arduino_comm.c
+ * @author Hossein Molavi (hmolavi@uwaterloo.ca)
  *
+ * @brief Communication interface between ESP32 and Arduino systems.
+ *
+ * This source file implements SPI communication between ESP32 and Arduino.
+ * It defines the functions, data structures, and error handling mechanisms for
+ * interfacing an ESP32 with Arduino via SPI, including data chunk encoding and
+ * decoding with Hamming error correction.
+ *
+ * @version 1.0
+ * @date 2024-04-13
+ *
+ * @copyright Copyright (c) 2023
  */
 
 #include "esp32_arduino_comm.h"
