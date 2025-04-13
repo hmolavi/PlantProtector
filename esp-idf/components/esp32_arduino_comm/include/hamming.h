@@ -44,19 +44,25 @@ extern "C" {
 int parity_check(int n, int *data, int p);
 
 /**
- * @brief Encode data using Hamming code.
+ * @brief Encode data using Hamming(7,4) error correction.
  *
- * This function encodes the given data using Hamming code, which includes
- * calculating and setting the necessary parity bits. The encoded data is
- * stored in the provided encoded_data array.
+ * This function encodes the provided data using the Hamming(7,4) scheme,
+ * by calculating and inserting the appropriate parity bits. The parity
+ * bits are determined using the parity_check() function to ensure even parity.
  *
- * - Dependant on parity_check()
+ * The function handles the conversion from data bits to an encoded form
+ * that includes both data and parity bits, preparing the array for error
+ * detection and correction.
  *
  * @param data Pointer to the array containing the data bits to be encoded.
  * @param data_bits The number of data bits in the input array.
- * @param encoded_data Pointer to the array where the encoded data will be stored.
+ * @param encoded_data Pointer to the array where the complete encoded data 
+ *                     (including parity bits) will be stored.
+ *
+ * @note Ensure that the encoded_data array has been pre-allocated with
+ * sufficient size to accommodate both the data and parity bits.
  */
-void hamming_encode(int *data, int data_bits, int *encoded_data);
+void hamming_encode_74(const int *input_bits, int total_bits, int *out_bits);
 
 /**
  * @brief Calculate the syndrome for the given encoded Hamming code data.
@@ -75,27 +81,23 @@ void hamming_encode(int *data, int data_bits, int *encoded_data);
 int calculate_syndrome(int n, int *encoded_data);
 
 /**
- * @brief Decodes encoded data using Hamming code.
+ * @brief Decode Hamming(7,4) encoded data with error detection and correction.
  *
- * This function takes encoded data that uses Hamming code for error detection
- * and correction, calculates the syndrome to detect any errors, corrects the
- * error if detected, and then extracts the original data bits from the encoded
- * data.
+ * This function decodes data encoded with the Hamming(7,4) error correction scheme.
+ * It performs the following operations:
+ *   1. Calculates the syndrome (using calculate_syndrome()) to detect single-bit errors.
+ *   2. Corrects the erroneous bit if a non-zero syndrome is detected.
+ *   3. Determines the positions of parity bits based on the Hamming(7,4) format.
+ *   4. Extracts the original data bits from the encoded array, discarding the parity bits.
  *
- * - Dependant on calculate_syndrome()
- * - Dependant on parity_check()
+ * @note The encoded_data is expected to be generated using the Hamming(7,4) encoding method.
+ *       This function depends on both the calculate_syndrome() and parity_check() functions.
  *
- * @param encoded_data Pointer to the array of encoded data bits.
- * @param n The number of bits in the encoded data.
- * @param decoded_data Pointer to the array where the decoded data bits will be stored.
- *
- * The function performs the following steps:
- * 1. Calculates the syndrome to detect errors in the encoded data.
- * 2. If an error is detected (syndrome is non-zero), it corrects the error by flipping the incorrect bit.
- * 3. Determines the number of parity bits used in the encoded data.
- * 4. Extracts the original data bits from the encoded data, ignoring the parity bits.
+ * @param encoded_data Pointer to the array containing the encoded data bits (data and parity).
+ * @param n The total number of bits in the encoded_data array.
+ * @param decoded_data Pointer to the array where the original decoded data bits will be stored.
  */
-void hamming_decode(int *encoded_data, int n, int *decoded_data);
+void hamming_decode_74(const int *in_bits, int total_bits, int *decoded_bits);
 
 #ifdef __cplusplus
 }

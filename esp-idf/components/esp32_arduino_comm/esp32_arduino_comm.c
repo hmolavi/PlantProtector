@@ -30,7 +30,7 @@ static const char *TAG = "esp32_arduino_comm.c";
 
 typedef struct {
     const char *name;
-    uint16_t code;
+    uint8_t code;
     const char *description;
 } SPICommandInfo_t;
 
@@ -152,7 +152,7 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
         }
     }
 
-    Comm_Log("Performing (%s) action with data (%s)", CommDescriptor[action].name, data ? data : "NULL");
+    Comm_Log("Performing (%s)(0x%02X) action with data (%s)", CommDescriptor[action].name, CommDescriptor[action].code, data ? data : "NULL");
 
     if (dataLen > DATA_LENGTH) {
         Comm_Log("Data exceeds max length (%d/%d)", dataLen, DATA_LENGTH);
@@ -326,9 +326,9 @@ int encode_chunk(Chunk_t chunk, uint8_t *encoded_chunk)
     int chunk_bits[sizeof(Chunk_t) * 8];  // 32 bytes * 8 = 256 bits
     bytes_to_bits((uint8_t *)&chunk, sizeof(Chunk_t), chunk_bits);
 
-    /* 3. Hamming encode all bits at once */
-    int encoded_bits[CHUNK_ENCODED_SIZE * 8];  // 56 bytes * 8 = 448 bits
-    hamming_encode(chunk_bits, sizeof(Chunk_t) * 8, encoded_bits);
+    /* 3. Hamming(7,4) encode in 4-bit segments => 64 segments => 448 bits */
+    int encoded_bits[CHUNK_ENCODED_SIZE * 8];
+    hamming_encode_74(chunk_bits, sizeof(Chunk_t) * 8, encoded_bits);
 
     /* 4. Convert back to bytes */
     bits_to_bytes(encoded_bits, CHUNK_ENCODED_SIZE * 8, encoded_chunk);
@@ -344,9 +344,9 @@ int decode_chunk(uint8_t *encoded_chunk, Chunk_t *decoded_chunk)
     int encoded_bits[CHUNK_ENCODED_SIZE * 8];  // 56 bytes * 8 = 448 bits
     bytes_to_bits(encoded_chunk, CHUNK_ENCODED_SIZE, encoded_bits);
 
-    /* 2. Hamming decode all bits at once */
+    /* 2. Hamming decode in 4-bit segments (448 bits -> 256 bits) */
     int decoded_bits[sizeof(Chunk_t) * 8];  // 256 bits
-    hamming_decode(encoded_bits, CHUNK_ENCODED_SIZE * 8, decoded_bits);
+    hamming_decode_74(encoded_bits, sizeof(Chunk_t) * 8, decoded_bits);
 
     /* 3. Convert bits back to chunk */
     bits_to_bytes(decoded_bits, sizeof(Chunk_t) * 8, (uint8_t *)decoded_chunk);
