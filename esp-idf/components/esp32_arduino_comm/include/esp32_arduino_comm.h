@@ -36,10 +36,9 @@ extern "C" {
 /* Encoded size calculated based off Hamming(7,4) */
 #define CHUNK_ENCODED_SIZE (CHUNK_SIZE * 7) / 4
 
-/* SPI Ports */
-#ifdef ARDUINO
-#define SPI_SS 10
-#else
+/* SPI Ports for ESP32 */
+/* Arduino has built in defined ports */
+#ifndef ARDUINO
 #define SPI_SCK 36
 #define SPI_MISO 37
 #define SPI_MOSI 35
