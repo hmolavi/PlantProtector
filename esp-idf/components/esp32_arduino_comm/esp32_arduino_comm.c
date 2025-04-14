@@ -46,7 +46,6 @@ static const SPICommandInfo_t CommDescriptor[] = {
 /* Platform Abstraction Layer */
 #ifdef ARDUINO
 #include <SPI.h>
-#define COMM_GPIO_WRITE(pin, val) digitalWrite(pin, val)
 #define COMM_SPI_BEGIN() SPI.begin()
 #define COMM_DELAY(ms) delay(ms)
 #define GET_TIME_MS millis()
@@ -59,7 +58,6 @@ static const SPICommandInfo_t CommDescriptor[] = {
 static spi_device_handle_t spi_device;
 #define HIGH 1
 #define LOW 0
-#define COMM_GPIO_WRITE(pin, val) gpio_set_level(pin, val)
 #define COMM_DELAY(ms) vTaskDelay(pdMS_TO_TICKS(ms))
 #define GET_TIME_MS esp_timer_get_time() / 1000
 #endif
@@ -69,42 +67,31 @@ static spi_device_handle_t spi_device;
 #define COMM_TIMEOUT_MS 10000
 #define COMM_RESPONSE_POLL_INTERVAL_MS 100
 
-/* Abstracted SPI Transfer */
-static CommError_t spi_transfer(uint8_t *tx_data, uint8_t *rx_data, size_t len)
+int CommManager_SendChunk(uint8_t *encoded_chunk)
 {
-#ifdef ARDUINO
-    SPI.transfer(tx_data, len);
-    if (rx_data) SPI.transfer(rx_data, len);
-    return COMM_SUCCESS;
-#else  // elif defined(ESP_IDF)
-    if (spi_device == NULL) {
-        Comm_Log("SPI device handle is not initialized");
-        return COMM_SPI_ERROR;
-    }
     spi_transaction_t trans = {
-        .length = len * 8,
-        .tx_buffer = tx_data,
-        .rx_buffer = rx_data};
-    return spi_device_transmit(spi_device, &trans) == ESP_OK ? COMM_SUCCESS : COMM_SPI_ERROR;
-#endif
+        .length = CHUNK_ENCODED_SIZE * 8,
+        .tx_buffer = encoded_chunk,
+    };
+
+    esp_err_t ret = spi_device_transmit(spi_device, &trans);
+    return (ret == ESP_OK) ? COMM_SUCCESS : COMM_SPI_ERROR;
 }
 
 int CommManager_Init(void)
 {
-#ifdef ARDUINO
-    return EXIT_SUCCESS;
-#else  // ESP_IDF
     spi_bus_config_t buscfg = {
         .mosi_io_num = SPI_MOSI,
         .miso_io_num = SPI_MISO,
         .sclk_io_num = SPI_SCK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = CHUNK_ENCODED_SIZE};
+        .max_transfer_sz = CHUNK_ENCODED_SIZE,
+        .flags = 0};
 
     spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 1000000,  // 1 MHz
-        .mode = 0,                  // SPI mode 0
+        .mode = 0,                 // SPI mode 0
+        .clock_speed_hz = 100000,  // 100 KHz
         .spics_io_num = SPI_SS,
         .queue_size = 1,
     };
@@ -125,7 +112,6 @@ int CommManager_Init(void)
     }
 
     return EXIT_SUCCESS;
-#endif
 }
 
 #ifndef ARDUINO
@@ -174,96 +160,25 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
         return COMM_ENCODING_ERROR;
     }
 
-    /* Get actual protocol codes from descriptor */
-    const uint8_t ACK_CODE = CommDescriptor[COMM_ACK].code;
-    const uint8_t NACK_CODE = CommDescriptor[COMM_NACK].code;
+    // Print the encoded chunk
+    for (size_t i = 0; i < CHUNK_ENCODED_SIZE; i++) {
+        if (i % 16 == 0) printf("\n");
+        printf("0x%0X ", encoded_chunk[i]);
+    }
+    printf("\n");
 
-    /* SPI Transmission */
-    CommError_t ret = COMM_SUCCESS;
-    uint8_t ack;
-    uint32_t timeout = GET_TIME_MS + COMM_TIMEOUT_MS;
-    uint8_t ack_byte = ACK_CODE;
-
+    esp_err_t ret;
     printf("Ight here we go\n");
 
-    do {
-        /* Send encoded chunk */
-        COMM_GPIO_WRITE(SPI_SS, LOW);
-        ret = spi_transfer(encoded_chunk, NULL, CHUNK_ENCODED_SIZE);
-        COMM_GPIO_WRITE(SPI_SS, HIGH);
-
-        if (ret != COMM_SUCCESS) {
-            Comm_Log("SPI transfer error: %d", ret);
-            break;
-        }
-
-        /* Wait for ACK */
-        COMM_GPIO_WRITE(SPI_SS, LOW);
-        ret = spi_transfer(&ack_byte, &ack, 1);
-        COMM_GPIO_WRITE(SPI_SS, HIGH);
-
-    } while (ack != ACK_CODE && GET_TIME_MS < timeout);
-
-    printf("Fini\n");
-
-    if (ack != ACK_CODE) {
-        Comm_Log("No valid ACK received (0x%02X)", ack);
-        return COMM_TIMEOUT;
-    }
-
-    /* Handle Read Operations */
-    if (action == COMM_SD_Read || action == COMM_RTC_Read) {
-        uint8_t response_encoded[CHUNK_ENCODED_SIZE];
-        Chunk_t response_chunk;
-        uint8_t retries = COMM_RETRY_COUNT;
-        bool valid_response = false;
-        uint8_t nack_byte = NACK_CODE;
-
-        do {
-            /* Receive Response */
-            uint32_t start = GET_TIME_MS;
-            while ((GET_TIME_MS - start) < COMM_TIMEOUT_MS) {
-                COMM_GPIO_WRITE(SPI_SS, LOW);
-                ret = spi_transfer(NULL, response_encoded, CHUNK_ENCODED_SIZE);
-                COMM_GPIO_WRITE(SPI_SS, HIGH);
-
-                if (ret == COMM_SUCCESS) break;
-                COMM_DELAY(COMM_RESPONSE_POLL_INTERVAL_MS);
-            }
-
-            if (ret != COMM_SUCCESS) {
-                Comm_Log("Response timeout");
-                return COMM_TIMEOUT;
-            }
-
-            /* Decode and Validate */
-            if (decode_chunk(response_encoded, &response_chunk) == COMM_SUCCESS) {
-                valid_response = true;
-                break;
-            }
-
-            /* Send NACK */
-            COMM_GPIO_WRITE(SPI_SS, LOW);
-            spi_transfer(&nack_byte, NULL, 1);
-            COMM_GPIO_WRITE(SPI_SS, HIGH);
-
-        } while (retries-- > 0);
-
-        if (!valid_response) {
-            Comm_Log("Invalid response after %d retries", COMM_RETRY_COUNT);
-            return COMM_CRC_ERROR;
-        }
-
-        /* Process Valid Response */
-        char received_data[DATA_LENGTH + 1] = {0};
-        memcpy(received_data, response_chunk.data, DATA_LENGTH);
-        Comm_Printf("Received: %s", received_data);
-
-        /* Send final ACK */
-        COMM_GPIO_WRITE(SPI_SS, LOW);
-        spi_transfer(&ack_byte, NULL, 1);
-        COMM_GPIO_WRITE(SPI_SS, HIGH);
-    }
+    uint8_t *tx_data = encoded_chunk;
+    spi_transaction_t t1 = {
+        .tx_buffer = tx_data,
+        .length = 56 * 8, // CHUNK_ENCODED_SIZE
+    };
+    ret = spi_device_transmit(spi_device, &t1);
+    ESP_ERROR_CHECK(ret);
+    Comm_Log("SPI transfer Sent");
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     return COMM_SUCCESS;
 }
