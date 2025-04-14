@@ -163,7 +163,7 @@ CommError_t Comm_ExecuteCommand(SPICommands_t action, const char *data)
     // Print the encoded chunk
     for (size_t i = 0; i < CHUNK_ENCODED_SIZE; i++) {
         if (i % 16 == 0) printf("\n");
-        printf("0x%0X ", encoded_chunk[i]);
+        printf("0x%02X ", encoded_chunk[i]);
     }
     printf("\n");
 
