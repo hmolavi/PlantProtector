@@ -3,4 +3,6 @@ esp-idf/sdkconfig
 esp-idf/build/
 esp-idf/dependencies.lock
 esp-idf/sdkconfig.old
+esp-idf/managed_components/
+
 esp-idf/main/private.h
