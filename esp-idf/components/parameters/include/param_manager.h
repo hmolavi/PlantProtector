@@ -16,26 +16,26 @@
 
 #include "esp_err.h"
 
-#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
-    struct {                                                               \
-        const uint8_t secure_level;                                        \
-        const char* name;                                                  \
-        type_ value;                                                       \
-        const type_ default_value;                                         \
-        bool is_dirty;                                                     \
-        bool is_default;                                                   \
-        const char* const key;                                             \
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_) \
+    struct {                                                           \
+        const uint8_t secure_level;                                    \
+        const char* name;                                              \
+        type_ value;                                                   \
+        const type_ default_value;                                     \
+        bool is_dirty;                                                 \
+        bool is_default;                                               \
+        const char* const key;                                         \
     } name_;
-#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn) \
-    struct {                                                                      \
-        const uint8_t secure_level;                                               \
-        const char* name;                                                         \
-        type_ value[size_];                                                       \
-        const size_t size;                                                        \
-        const type_ default_value[size_];                                         \
-        bool is_dirty;                                                            \
-        bool is_default;                                                          \
-        const char* const key;                                                    \
+#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_) \
+    struct {                                                                  \
+        const uint8_t secure_level;                                           \
+        const char* name;                                                     \
+        type_ value[size_];                                                   \
+        const size_t size;                                                    \
+        const type_ default_value[size_];                                     \
+        bool is_dirty;                                                        \
+        bool is_default;                                                      \
+        const char* const key;                                                \
     } name_;
 typedef struct ParamMasterControl_s {
 #include "param_table.inc"
@@ -54,15 +54,15 @@ extern ParamMasterControl_t g_params;
 ///       ARRAY Setters perform bound checks before setting the value.
 ///       ARRAY Resetters work as expected.
 ///       ARRAY Copy allows copying the array to a provided buffer.
-#define PARAM(secure_lvl_, type_, name_, default_value_, description_, pn) \
-    esp_err_t Param_Set##pn(const type_ value);                            \
-    type_ Param_Get##pn(void);                                             \
-    esp_err_t Param_Reset##pn(void);
-#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_, pn) \
-    esp_err_t Param_Set##pn(const type_* value, size_t length);                   \
-    const type_* Param_Get##pn(size_t* out_length);                               \
-    esp_err_t Param_Copy##pn(type_* buffer, size_t buffer_size);                  \
-    esp_err_t Param_Reset##pn(void);
+#define PARAM(secure_lvl_, type_, name_, default_value_, description_) \
+    esp_err_t Param_Set##name_(const type_ value);                     \
+    type_ Param_Get##name_(void);                                      \
+    esp_err_t Param_Reset##name_(void);
+#define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_) \
+    esp_err_t Param_Set##name_(const type_* value, size_t length);            \
+    const type_* Param_Get##name_(size_t* out_length);                        \
+    esp_err_t Param_Copy##name_(type_* buffer, size_t buffer_size);           \
+    esp_err_t Param_Reset##name_(void);
 #include "param_table.inc"
 #undef PARAM
 #undef ARRAY
@@ -91,6 +91,34 @@ typedef enum ParamDataTypes_e {
     type_undefined,
 } ParamDataTypes_t;
 
+/// @brief Union type for parameter values
+///        Used to create another set of Setters/Getters/Print
+///        functions for the ParamDescriptor_t
+typedef union {
+    // Scalar Types
+    char c;
+    bool b;
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    int32_t i32;
+    float f;
+
+    // Array Types
+    char* c_array;
+    bool* b_array;
+    uint8_t* u8_array;
+    uint16_t* u16_array;
+    uint32_t* u32_array;
+    int32_t* i32_array;
+    float* f_array;
+
+} ParamValue_t;
+
+typedef esp_err_t (*ParamGetFn)(ParamValue_t*);
+typedef esp_err_t (*ParamSetFn)(ParamValue_t);
+typedef esp_err_t (*ParamPrintFn)(char*, size_t);
+
 /// @brief Descriptor for parameters, used to quickly find and
 ///        modify parameters from console
 typedef struct {
@@ -112,6 +140,9 @@ typedef struct {
 extern const ParamDescriptor_t g_params_descriptor[];
 const uint32_t g_params_descriptor_size;
 
+// uint32_t ParamManager_Get_uint32_t(ParamValue_t* val) { return val->u32; }
+// void ParamManager_uint32_t_Set(ParamValue_t* val, ParamValue_t* ref) { val->u32 = ref->u32; }
+// void Print_uint32_t(char* buf, ParamValue_t* val) { sprintf(buf, "%" PRIu32, val->u32); }
 
 esp_err_t Param_Print(const char* name, char* out_buffer);
 

@@ -22,6 +22,13 @@
 #include "esp_log.h"
 
 static const char *TAG = "secure_level.c";
+
+/*
+
+TODO: Create param_table.inc file for the security levels
+
+*/
+
 const char *level_meanings[] = {"Full access", "Maintenance", "User level"};
 
 static uint8_t CurrentSecureLevel = 2;
