@@ -16,6 +16,16 @@
 
 #include "esp_err.h"
 
+/* Use compiler to verify that the array is initialized properly.
+    Char arrays are exept from this check */
+#define ARRAY(s, type, size, name, init, d)                              \
+    static const type name##_init[] = init;                              \
+    _Static_assert(__builtin_types_compatible_p(type, char) ||           \
+                       ((sizeof(name##_init) / sizeof(type)) == (size)), \
+                   "Initializer count mismatch for " #name);
+#include "param_table.inc"
+#undef ARRAY
+
 #define PARAM(secure_lvl_, type_, name_, default_value_, description_) \
     struct {                                                           \
         const uint8_t secure_level;                                    \
@@ -60,7 +70,7 @@ extern ParamMasterControl_t g_params;
     esp_err_t Param_Reset##name_(void);
 #define ARRAY(secure_lvl_, type_, size_, name_, default_value_, description_) \
     esp_err_t Param_Set##name_(const type_* value, size_t length);            \
-    const type_* Param_Get##name_(size_t* out_length);                        \
+    const type_* Param_Get##name_(size_t* out_array_length);                  \
     esp_err_t Param_Copy##name_(type_* buffer, size_t buffer_size);           \
     esp_err_t Param_Reset##name_(void);
 #include "param_table.inc"

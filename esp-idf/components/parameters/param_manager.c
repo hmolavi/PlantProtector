@@ -126,9 +126,9 @@ ParamMasterControl_t g_params = {
         }                                                                                    \
         return ESP_ERR_INVALID_ARG;                                                          \
     }                                                                                        \
-    const type_* Param_Get##name_(size_t* out_length)                                        \
+    const type_* Param_Get##name_(size_t* out_array_length)                                  \
     {                                                                                        \
-        if (out_length) *out_length = g_params.name_.size;                                   \
+        if (out_array_length) *out_array_length = g_params.name_.size;                       \
         return g_params.name_.value;                                                         \
     }                                                                                        \
     esp_err_t Param_Copy##name_(type_* buffer, size_t buffer_size)                           \
