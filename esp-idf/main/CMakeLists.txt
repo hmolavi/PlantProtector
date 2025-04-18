@@ -19,6 +19,4 @@ idf_component_register(
                         ../components/esp32_arduino_comm/include
                     REQUIRES 
 						console 
-						nvs_flash 
-						fatfs
 					)

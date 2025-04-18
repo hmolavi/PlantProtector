@@ -31,8 +31,6 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
-#include "nvs.h"
-#include "nvs_flash.h"
 #include "private.h"  // Holds the wifi ssid and password
 #include "thermistor.h"
 #include "wifi.h"
@@ -60,14 +58,14 @@ void wifi_task(void *arg)
     Wifi_TryConnect();
 
     while (1) { /* Weeeeeee */
-        #if DEBUG == 0
+#if DEBUG == 0
         esp_err_t ret;
 
         ret = ADC_Update();
         if (ret == ESP_OK) {
             Thermistor_Print();
         }
-        #endif
+#endif
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -102,7 +100,9 @@ void app_main(void)
     a = Comm_ExecuteCommand(COMM_RTC_Read, NULL);
     if (a != COMM_SUCCESS) {
         printf("code is buns");
-        while(1) {vTaskDelay(pdMS_TO_TICKS(1000));}
+        while (1) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
     }
 
     /* Update wifi name and password */
