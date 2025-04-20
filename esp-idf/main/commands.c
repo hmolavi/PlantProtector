@@ -10,8 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "param_manager.h"
-#include "secure_level.h"
+#include "nvs_config.h"
 #include "esp_console.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -106,7 +105,7 @@ esp_err_t Cmd_Connect(int argc, char **argv)
 esp_err_t Cmd_Save(int argc, char **argv)
 {
     printf("Saving dirty parameters\n");
-    ParamManager_SaveDirtyParameters();
+    NvsConfig_SaveDirtyParameters();
     return ESP_OK;
 }
 
@@ -302,8 +301,6 @@ esp_err_t Cmd_EditParam(int argc, char **argv)
 //     printf("%s updated successfully\n", desc->name);
 //     return ESP_OK;
 // }
-
-
 
 // /* Allow the user to change GPIOs */
 // ParserReturnVal_t CmdGPIO(int mode)

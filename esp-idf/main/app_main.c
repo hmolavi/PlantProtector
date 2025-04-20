@@ -20,7 +20,7 @@
 #include "adc_manager.h"
 #include "esp32_arduino_comm.h"
 #include "gpio_manager.h"
-#include "param_manager.h"
+#include "nvs_config.h"
 
 /* Other tings */
 #include "ascii_art.h"
@@ -79,7 +79,7 @@ void app_main(void)
     /* Initialize Components */
     esp_err_t ret;
 
-    ret = ParamManager_Init();
+    ret = NvsConfig_Init();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to init Parameters");
         return;

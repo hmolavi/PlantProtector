@@ -11,8 +11,6 @@ idf_component_register(
 						.
                         ./include
                         ../components/library
-                        ../components/parameters
-                        ../components/parameters/include
                         ../components/peripherals
                         ../components/peripherals/include
                         ../components/esp32_arduino_comm

@@ -22,7 +22,7 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "param_manager.h"
+#include "nvs_config.h"
 
 #define MAX_RETRIES 2
 
