@@ -9,9 +9,6 @@
  * interfacing an ESP32 with Arduino via SPI, including data chunk encoding and
  * decoding with Hamming error correction.
  *
- * @version 1.0
- * @date 2024-04-13
- *
  * @copyright Copyright (c) 2023
  */
 

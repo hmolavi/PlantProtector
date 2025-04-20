@@ -3,5 +3,4 @@ idf_component_register(
                         esp32_arduino_comm.c
                     INCLUDE_DIRS 
                         .
-                        ./include
                     )

@@ -9,10 +9,6 @@
  * definitions, error codes, and functions for encoding and decoding data with
  * Hamming(7,4) error correction.
  *
- *
- * @version 1.0
- * @date 2024-04-13
- *
  * @copyright Copyright (c) 2023
  */
 
