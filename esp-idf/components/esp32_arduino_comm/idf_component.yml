@@ -1,5 +1,0 @@
-## IDF Component Manager Manifest File
-dependencies:
-  hmolavi/hamming74: ">=1.0.1"
-  idf:
-    version: ">=4.1.0"
