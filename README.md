@@ -6,8 +6,8 @@
 <em>ASCII Art displayed when reading serial monitor from esp-idf side upon launch</em>  
 <br><br>
 
-<img src="https://github.com/user-attachments/assets/81a8a352-30bc-4e79-a403-1727ca632b10" width="450"/>
-<img src="https://github.com/user-attachments/assets/689ba080-d810-4638-8fb7-3a4b6d97f650" width="450"/>
+<img src="https://github.com/user-attachments/assets/81a8a352-30bc-4e79-a403-1727ca632b10" width="300"/>
+<img src="https://github.com/user-attachments/assets/689ba080-d810-4638-8fb7-3a4b6d97f650" width="300"/>
 <br>
 <em>Custom PCB used to hold the ESP32S3 and ATMega328 chips</em>
 <br><br>
